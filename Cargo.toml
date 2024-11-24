@@ -1,0 +1,22 @@
+[workspace]
+resolver = "2"
+members = [
+    "utils",
+    "template",
+    "xtask"]
+
+[workspace.dependencies]
+# Flexible concrete Error type built on std::error::Error
+anyhow = "1.0"
+# A dead simple ANSI terminal color painting library.
+yansi = "1.0.0-gamma"
+itertools = "0.12"
+# An implementation of regular expressions for Rust. This implementation uses finite automata …
+regex = "1.10"
+# Pathfinding, flow, and graph algorithms
+pathfinding = "4.4"
+
+tracing = "0.1"
+tracing-subscriber = "0.3"
+tracing-test = "0.2"
+lazy_static = "1.4"
