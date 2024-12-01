@@ -3,7 +3,7 @@ resolver = "2"
 members = [
     "utils",
     "template",
-    "xtask", "day1"]
+    "xtask", "day1", "day2"]
 
 [workspace.dependencies]
 # Flexible concrete Error type built on std::error::Error
