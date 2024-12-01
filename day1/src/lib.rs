@@ -8,8 +8,8 @@ pub type ResultType = u64;
 
 #[derive(Debug, Default)]
 pub struct Solution {
-    left: Vec<u64>,
-    right: Vec<u64>,
+    left: Vec<ResultType>,
+    right: Vec<ResultType>,
 }
 impl Solution {
     fn distance(a: &ResultType, b: &ResultType) -> ResultType {
@@ -73,23 +73,5 @@ impl utils::Solution for Solution {
 
         // Implement for problem
         Ok(answer)
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use std::io::BufReader;
-
-    use tracing_test::traced_test;
-    use utils::Solution;
-
-    #[test]
-    #[traced_test]
-    fn read() {
-        let input = "replace for problem";
-        let r = BufReader::new(input.as_bytes());
-        let s = crate::Solution::try_from(r).unwrap();
-        assert_eq!(0 as ResultType, s.answer_part1(false).unwrap());
     }
 }
