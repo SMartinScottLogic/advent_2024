@@ -1,3 +1,4 @@
+use regex::Regex;
 use std::{
     collections::HashMap,
     io::{BufRead, BufReader},
@@ -26,11 +27,24 @@ impl<T: std::io::Read> TryFrom<BufReader<T>> for Solution {
     type Error = std::io::Error;
 
     fn try_from(reader: BufReader<T>) -> Result<Self, Self::Error> {
+        let regex = Regex::new(r"^(?<left>\d+)\s+(?<right>\d+)$").expect("error with regex");
         let mut solution = Self::default();
         for (id, line) in reader.lines().map_while(Result::ok).enumerate() {
-            let mut i = line.split_whitespace().map(|s| s.parse::<u64>().unwrap());
-            let left = i.next().unwrap();
-            let right = i.next().unwrap();
+            let captures = regex.captures(&line).expect("failure parsing");
+            let left = captures
+                .name("left")
+                .expect("failed to retrieve 'left'")
+                .as_str();
+            let left = left
+                .parse()
+                .unwrap_or_else(|e| panic!("failed to parse {}: {}", left, e));
+            let right = captures
+                .name("right")
+                .expect("failed to retrieve 'right'")
+                .as_str();
+            let right = right
+                .parse()
+                .unwrap_or_else(|e| panic!("failed to parse {}: {}", right, e));
             solution.left.push(left);
             solution.right.push(right);
         }
