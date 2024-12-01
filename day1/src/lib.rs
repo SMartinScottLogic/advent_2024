@@ -1,5 +1,8 @@
-use std::io::{BufRead, BufReader};
-use tracing::{debug, event_enabled, info, Level};
+use std::{
+    collections::HashMap,
+    io::{BufRead, BufReader},
+};
+use tracing::debug;
 
 pub type ResultType = u64;
 
@@ -44,16 +47,32 @@ impl utils::Solution for Solution {
         let mut right = self.right.clone();
         right.sort();
         for (a, b) in left.iter().zip(right.iter()) {
-            info!(a, b, "sorted");
+            debug!(a, b, "sorted");
         }
-        let answer = left.iter().zip(right.iter()).map(|(a, b)| Self::distance(a, b)).sum();
+        let answer = left
+            .iter()
+            .zip(right.iter())
+            .map(|(a, b)| Self::distance(a, b))
+            .sum();
         // Implement for problem
         Ok(answer)
     }
 
     fn answer_part2(&self, _is_full: bool) -> Self::Result {
+        let right_count = self.right.iter().fold(HashMap::new(), |mut acc, value| {
+            let entry: &mut ResultType = acc.entry(*value).or_default();
+            *entry += 1;
+            acc
+        });
+
+        let answer = self
+            .left
+            .iter()
+            .map(|v| v * right_count.get(v).cloned().unwrap_or_default())
+            .sum();
+
         // Implement for problem
-        Ok(0)
+        Ok(answer)
     }
 }
 
