@@ -1,5 +1,7 @@
-use std::{cmp::Ordering, io::{BufRead, BufReader}};
-use itertools::Itertools;
+use std::{
+    cmp::Ordering,
+    io::{BufRead, BufReader},
+};
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};
 
@@ -35,24 +37,32 @@ impl utils::Solution for Solution {
 
     fn answer_part1(&self, _is_full: bool) -> Self::Result {
         // Implement for problem
-        let answer = self.reports.iter().filter(|v| Self::is_safe_part1(*v)).count();
+        let answer = self
+            .reports
+            .iter()
+            .filter(|v| Self::is_safe_part1(v))
+            .count();
         Ok(answer as ResultType)
     }
 
     fn answer_part2(&self, _is_full: bool) -> Self::Result {
         // Implement for problem
-        let answer = self.reports.iter().filter(|v| {
-            if Self::is_safe_part1(*v) {
-                true
-            } else {
-                for skip in 0..v.len() {
-                    if Self::is_safe_part2(*v, skip) {
-                        return true;
+        let answer = self
+            .reports
+            .iter()
+            .filter(|v| {
+                if Self::is_safe_part1(v) {
+                    true
+                } else {
+                    for skip in 0..v.len() {
+                        if Self::is_safe_part2(v, skip) {
+                            return true;
+                        }
                     }
+                    false
                 }
-                false
-            }
-        }).count();
+            })
+            .count();
         Ok(answer as ResultType)
     }
 }
@@ -61,7 +71,7 @@ impl Solution {
         let mut dir = Ordering::Equal;
         let mut last = 0;
         for (i, cur) in report.iter().enumerate() {
-            if i==0 {
+            if i == 0 {
                 last = *cur;
                 continue;
             }
@@ -99,7 +109,7 @@ impl Solution {
             if i == skip {
                 continue;
             }
-            if last == None {
+            if last.is_none() {
                 last = Some(*cur);
                 continue;
             }
@@ -128,22 +138,5 @@ impl Solution {
         }
         info!(report = debug(report), "safe");
         true
-    }
-}
-#[cfg(test)]
-mod test {
-    use super::*;
-    use std::io::BufReader;
-
-    use tracing_test::traced_test;
-    use utils::Solution;
-
-    #[test]
-    #[traced_test]
-    fn read() {
-        let input = "replace for problem";
-        let r = BufReader::new(input.as_bytes());
-        let s = crate::Solution::try_from(r).unwrap();
-        assert_eq!(0 as ResultType, s.answer_part1(false).unwrap());
     }
 }
