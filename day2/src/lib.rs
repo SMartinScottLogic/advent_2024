@@ -35,17 +35,29 @@ impl utils::Solution for Solution {
 
     fn answer_part1(&self, _is_full: bool) -> Self::Result {
         // Implement for problem
-        let answer = self.reports.iter().filter(|v| Self::is_safe(*v)).count();
+        let answer = self.reports.iter().filter(|v| Self::is_safe_part1(*v)).count();
         Ok(answer as ResultType)
     }
 
     fn answer_part2(&self, _is_full: bool) -> Self::Result {
         // Implement for problem
-        Ok(0)
+        let answer = self.reports.iter().filter(|v| {
+            if Self::is_safe_part1(*v) {
+                true
+            } else {
+                for skip in 0..v.len() {
+                    if Self::is_safe_part2(*v, skip) {
+                        return true;
+                    }
+                }
+                false
+            }
+        }).count();
+        Ok(answer as ResultType)
     }
 }
 impl Solution {
-    fn is_safe(report: &Vec<ResultType>) -> bool {
+    fn is_safe_part1(report: &Vec<ResultType>) -> bool {
         let mut dir = Ordering::Equal;
         let mut last = 0;
         for (i, cur) in report.iter().enumerate() {
@@ -75,6 +87,44 @@ impl Solution {
                 dir = Ordering::Less;
             }
             last = *cur;
+        }
+        info!(report = debug(report), "safe");
+        true
+    }
+
+    fn is_safe_part2(report: &Vec<ResultType>, skip: usize) -> bool {
+        let mut dir = Ordering::Equal;
+        let mut last = None;
+        for (i, cur) in report.iter().enumerate() {
+            if i == skip {
+                continue;
+            }
+            if last == None {
+                last = Some(*cur);
+                continue;
+            }
+            if last.unwrap() == *cur {
+                return false;
+            }
+            if last.unwrap() > *cur {
+                if dir == Ordering::Less {
+                    return false;
+                }
+                if last.unwrap() - *cur > 3 {
+                    return false;
+                }
+                dir = Ordering::Greater;
+            }
+            if last.unwrap() < *cur {
+                if dir == Ordering::Greater {
+                    return false;
+                }
+                if *cur - last.unwrap() > 3 {
+                    return false;
+                }
+                dir = Ordering::Less;
+            }
+            last = Some(*cur);
         }
         info!(report = debug(report), "safe");
         true
