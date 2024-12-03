@@ -36,63 +36,38 @@ impl utils::Solution for Solution {
         let regex = Regex::new(r"mul\((?<a>\d{1,3}),(?<b>\d{1,3})\)").unwrap();
         let mut total = 0;
         for input in &self.inputs {
-            let mut i = 0;
-            loop {
-                let c = regex.captures(&input[i..]);
-                if c.is_none() {
-                    break;
-                }
-                let c = c.unwrap();
-                debug!("empty: {}", c.get(0).unwrap().as_str());
-                let a: ResultType = c.name("a").unwrap().as_str().parse().unwrap();
-                let b: ResultType = c.name("b").unwrap().as_str().parse().unwrap();
+            for capture in regex.captures_iter(input) {
+                let a: ResultType = capture.name("a").unwrap().as_str().parse().unwrap();
+                let b: ResultType = capture.name("b").unwrap().as_str().parse().unwrap();
                 total += a * b;
-                debug!("{} x {} = {} => {}", a, b, a * b, total);
-                i += input[i..].find(c.get(0).unwrap().as_str()).unwrap();
-                i += c.get(0).unwrap().as_str().len();
-                debug!("next: {}", &input[i..]);
             }
         }
-        // Implement for problem
         Ok(total)
     }
 
     fn answer_part2(&self, _is_full: bool) -> Self::Result {
-        let regex = Regex::new(r"do\(\)|don't\(\)|mul\((?<a>\d{1,3}),(?<b>\d{1,3})\)").unwrap();
+        let regex = Regex::new(r"(?<op>do|don't|mul)\(((?<a>\d{1,3}),(?<b>\d{1,3}))?\)").unwrap();
         let mut total = 0;
         let mut enable = true;
         for input in &self.inputs {
-            let mut i = 0;
-            loop {
-                let c = regex.find_at(input, i);
-                if c.is_none() {
-                    break;
-                }
-                let end = c.unwrap().end();
-                let c = c.unwrap();
-                debug!("condition: {}", c.as_str());
-                match c.as_str() {
-                    "do()" => enable = true,
-                    "don't()" => enable = false,
-                    other => {
-                        let c = regex.captures(other);
-                        if c.is_none() {
-                            break;
-                        }
-                        let c = c.unwrap();
-                        debug!("empty: {}", c.get(0).unwrap().as_str());
-                        let a: ResultType = c.name("a").unwrap().as_str().parse().unwrap();
-                        let b: ResultType = c.name("b").unwrap().as_str().parse().unwrap();
+            for capture in regex.captures_iter(input) {
+                let op = capture.name("op").unwrap().as_str();
+                match op {
+                    "do" => enable = true,
+                    "don't" => enable = false,
+                    "mul" => {
                         if enable {
+                            let a: ResultType =
+                                capture.name("a").unwrap().as_str().parse().unwrap();
+                            let b: ResultType =
+                                capture.name("b").unwrap().as_str().parse().unwrap();
                             total += a * b;
                         }
-                        debug!("{} x {} = {} => {}", a, b, a * b, total);
                     }
+                    _ => panic!("unknown operator '{op}'"),
                 }
-                i = end;
             }
         }
-        // Implement for problem
         Ok(total)
     }
 }
