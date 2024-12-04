@@ -1,7 +1,7 @@
 use std::io::{BufRead, BufReader};
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};
-use utils::{Matrix, Point};
+use utils::Matrix;
 
 pub type ResultType = u64;
 
@@ -64,14 +64,10 @@ impl utils::Solution for Solution {
                 if let Some('M') = self.grid.get(sx, sy) {
                     for (dx, dy, nd) in [
                         (1, -1, [(1, 1), (-1, -1)]),
-                        (1, 0, [(0, 1), (0, -1)]), 
                         (1, 1, [(1, -1), (-1, 1)]),
-                        (0, 1, [(-1, 0), (1, 0)]),
                         (-1, 1, [(1, 1), (-1, -1)]),
-                        (-1, 0, [(0, 1), (0, -1)]),
                         (-1, -1, [(1, -1), (-1, 1)]),
-                        (0, -1, [(1, 0), (-1, 0)]),
-                        ] {
+                    ] {
                         let c1 = self.walk(sx + dx, sy + dy, dx, dy, "M", "MAS");
                         if c1 > 0 {
                             for (ndx, ndy) in nd {
@@ -80,8 +76,8 @@ impl utils::Solution for Solution {
                                 if let Some('M') = self.grid.get(nsx, nsy) {
                                     let c2 = self.walk(nsx + ndx, nsy + ndy, ndx, ndy, "M", "MAS");
                                     if c2 > 0 {
-                                    info!(sx, sy, dx, dy, c1, nsx, nsy, ndx, ndy, c2, "ns");                                    
-                                    total += c1 * c2;
+                                        debug!(sx, sy, dx, dy, c1, nsx, nsy, ndx, ndy, c2, "ns");
+                                        total += c1 * c2;
                                     }
                                 }
                             }
@@ -114,20 +110,4 @@ impl Solution {
         }
     }
 }
-#[cfg(test)]
-mod test {
-    use super::*;
-    use std::io::BufReader;
 
-    use tracing_test::traced_test;
-    use utils::Solution;
-
-    #[test]
-    #[traced_test]
-    fn read() {
-        let input = "replace for problem";
-        let r = BufReader::new(input.as_bytes());
-        let s = crate::Solution::try_from(r).unwrap();
-        assert_eq!(0 as ResultType, s.answer_part1(false).unwrap());
-    }
-}
