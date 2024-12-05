@@ -22,3 +22,6 @@ tracing-test = "0.2"
 lazy_static = "1.4"
 strum = "0.26.3"                    # Helpful macros for working with enums and strings
 strum_macros = "0.26.4"             # Helpful macros for working with enums and strings
+
+[profile.release]
+debug = true
