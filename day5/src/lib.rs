@@ -16,6 +16,7 @@ impl<T: std::io::Read> TryFrom<BufReader<T>> for Solution {
         let mut solution = Self::default();
         for (id, line) in reader.lines().map_while(Result::ok).enumerate() {
             // Implement for problem
+            
         }
         Ok(solution)
     }

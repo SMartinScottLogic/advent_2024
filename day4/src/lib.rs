@@ -2,17 +2,17 @@
 use std::io::{BufRead, BufReader};
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};
-use utils::{Direction, Matrix, Point};
+use utils::{Direction, Grid, Point};
 
 pub type ResultType = u64;
 
 #[derive(Debug, Default)]
 pub struct Solution {
-    grid: Matrix<char>,
+    grid: Grid<char, isize>,
 }
 impl Solution {
     fn set_character(&mut self, x: usize, y: usize, c: char) {
-        self.grid.set(x as isize, y as isize, c);
+        self.grid.set(&Point::new(x as isize, y as isize), c);
     }
 }
 
@@ -37,9 +37,11 @@ impl utils::Solution for Solution {
 
     fn answer_part1(&self, _is_full: bool) -> Self::Result {
         let mut total = 0;
-        for sy in self.grid.min_y()..=self.grid.max_y() {
-            for sx in self.grid.min_x()..=self.grid.max_x() {
-                if let Some('X') = self.grid.get(sx, sy) {
+        let range = self.grid.dimensions();
+        for sy in range.y.clone() {
+            for sx in range.x.clone() {
+                let pos = Point::new(sx, sy);
+                if let Some('X') = self.grid.get(&pos) {
                     for delta in Direction::iter() {
                         let pos = Point::new(sx, sy) + &delta;
                         if self.walk(pos, &delta, "X", "XMAS") {
@@ -56,10 +58,11 @@ impl utils::Solution for Solution {
 
     fn answer_part2(&self, _is_full: bool) -> Self::Result {
         let mut total = 0;
-        for sy in self.grid.min_y()..=self.grid.max_y() {
-            for sx in self.grid.min_x()..=self.grid.max_x() {
+        let range = self.grid.dimensions();
+        for sy in range.y.clone() {
+            for sx in range.x.clone() {
                 let start = Point::new(sx, sy);
-                if let Some('M') = self.grid.get(sx, sy) {
+                if let Some('M') = self.grid.get(&start) {
                     for (delta, next_deltas) in [
                         (Direction::NE, [Direction::SE, Direction::NW]),
                         (Direction::SE, [Direction::NE, Direction::SW]),
@@ -69,7 +72,7 @@ impl utils::Solution for Solution {
                         if self.walk(start + &delta, &delta, "M", "MAS") {
                             for next_delta in next_deltas {
                                 let new_start = start + &delta - &next_delta;
-                                if let Some('M') = self.grid.get(new_start.x(), new_start.y()) {
+                                if let Some('M') = self.grid.get(&new_start) {
                                     if self.walk(new_start + &next_delta, &next_delta, "M", "MAS") {
                                         total += 1;
                                     }
@@ -87,7 +90,7 @@ impl utils::Solution for Solution {
 
 impl Solution {
     fn walk(&self, pos: Point<isize>, delta: &Direction, s: &str, target: &str) -> bool {
-        if let Some(c) = self.grid.get(pos.x(), pos.y())
+        if let Some(c) = self.grid.get(&pos)
             && *c == target.chars().nth(s.len()).unwrap()
         {
             if target.len() == s.len() + 1 {
