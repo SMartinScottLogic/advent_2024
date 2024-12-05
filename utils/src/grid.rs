@@ -15,18 +15,18 @@ pub struct Range<T> {
 }
 impl<T> Range<T>
 where
-    T: Default,
+    T: Default + Step,
 {
     fn new() -> Self {
         Self {
-            x: T::default()..=T::default(),
-            y: T::default()..=T::default(),
+            x: T::forward(T::default(), 1)..=T::default(),
+            y: T::forward(T::default(), 1)..=T::default(),
         }
     }
 }
 
 #[derive(Debug, Clone)]
-struct Grid<T, V>
+pub struct Grid<T, V>
 where
     V: Default
         + Sized
@@ -52,7 +52,8 @@ where
         + AddAssign
         + Eq
         + PartialEq
-        + Hash,
+        + Hash
+        + Step,
 {
     pub fn new() -> Self {
         Self {
@@ -72,7 +73,8 @@ where
         + AddAssign
         + Eq
         + PartialEq
-        + Hash,
+        + Hash
+        + Step,
 {
     fn default() -> Self {
         Self::new()
@@ -102,6 +104,27 @@ where
 
     pub fn get(&self, point: &Point<V>) -> Option<&T> {
         self.data.get(point)
+    }
+
+    pub fn set(&mut self, point: &Point<V>, value: T)
+    where
+        V: Step,
+    {
+        self.data.insert(point.to_owned(), value);
+        let empty = self.range.x.is_empty();
+        if empty || self.range.x.start() > &point.x() {
+            self.range.x = point.x()..=*self.range.x.end();
+        }
+        if empty || self.range.x.end() < &point.x() {
+            self.range.x = *self.range.x.start()..=point.x();
+        }
+        let empty = self.range.y.is_empty();
+        if empty || self.range.y.start() > &point.y() {
+            self.range.y = point.y()..=*self.range.y.end();
+        }
+        if empty || self.range.y.end() < &point.y() {
+            self.range.y = *self.range.y.start()..=point.y();
+        }
     }
 
     pub fn dimensions(&self) -> &Range<V> {
@@ -148,5 +171,29 @@ where
             }
             println!("{line}");
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn grid() {
+        let mut grid = Grid::new();
+        grid.set(&Point::new(1, 1), 1);
+        let result = grid.get(&Point::new(1, 1));
+        assert_eq!(result, Some(&1i64));
+    }
+
+    #[test]
+    fn range_1() {
+        let mut grid = Grid::new();
+        grid.set(&Point::new(1, 1), 1);
+        let dim = grid.dimensions();
+        assert_eq!(1, *dim.x.start());
+        assert_eq!(1, *dim.x.end());
+        assert_eq!(1, *dim.x.start());
+        assert_eq!(1, *dim.y.end());
     }
 }

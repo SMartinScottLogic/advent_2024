@@ -10,3 +10,5 @@ tracing = {workspace = true}
 tracing-subscriber = {workspace = true}
 anyhow = {workspace = true}
 yansi = {workspace = true}
+strum = {workspace = true}
+strum_macros = {workspace = true}
