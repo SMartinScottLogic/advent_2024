@@ -1,4 +1,5 @@
 #![feature(step_trait)]
+mod direction;
 pub mod graph;
 pub mod math;
 mod matrix;
@@ -7,6 +8,7 @@ mod runner;
 mod solution;
 
 //pub use grid::Grid;
+pub use direction::Direction;
 pub use matrix::Matrix;
 pub use point::Point;
 pub use runner::{log_init, run, BaseName};

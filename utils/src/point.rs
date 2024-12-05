@@ -3,6 +3,8 @@ use std::{
     ops::{Add, AddAssign, Sub},
 };
 
+use crate::Direction;
+
 #[derive(Debug, Clone, Copy, PartialOrd, Ord, Eq, Hash, PartialEq)]
 pub struct Point<T>
 where
@@ -208,6 +210,122 @@ where
         Self {
             x: self.x - rhs.x,
             y: self.y - rhs.y,
+        }
+    }
+}
+
+impl<T> Add<Direction> for Point<T>
+where
+    T: Sized
+        + Copy
+        + Sub<Output = T>
+        + Add<Output = T>
+        + AddAssign
+        + Eq
+        + PartialEq
+        + std::hash::Hash
+        + Default
+        + Step,
+{
+    type Output = Self;
+
+    fn add(self, rhs: Direction) -> Self::Output {
+        match rhs {
+            Direction::N => self.north(),
+            Direction::NE => self.northeast(),
+            Direction::E => self.east(),
+            Direction::SE => self.southeast(),
+            Direction::S => self.south(),
+            Direction::SW => self.southwest(),
+            Direction::W => self.west(),
+            Direction::NW => self.northwest(),
+        }
+    }
+}
+
+impl<T> Add<&Direction> for Point<T>
+where
+    T: Sized
+        + Copy
+        + Sub<Output = T>
+        + Add<Output = T>
+        + AddAssign
+        + Eq
+        + PartialEq
+        + std::hash::Hash
+        + Default
+        + Step,
+{
+    type Output = Self;
+
+    fn add(self, rhs: &Direction) -> Self::Output {
+        match rhs {
+            Direction::N => self.north(),
+            Direction::NE => self.northeast(),
+            Direction::E => self.east(),
+            Direction::SE => self.southeast(),
+            Direction::S => self.south(),
+            Direction::SW => self.southwest(),
+            Direction::W => self.west(),
+            Direction::NW => self.northwest(),
+        }
+    }
+}
+
+impl<T> Sub<Direction> for Point<T>
+where
+    T: Sized
+        + Copy
+        + Sub<Output = T>
+        + Add<Output = T>
+        + AddAssign
+        + Eq
+        + PartialEq
+        + std::hash::Hash
+        + Default
+        + Step,
+{
+    type Output = Self;
+
+    fn sub(self, rhs: Direction) -> Self::Output {
+        match rhs {
+            Direction::N => self.south(),
+            Direction::NE => self.southwest(),
+            Direction::E => self.west(),
+            Direction::SE => self.northwest(),
+            Direction::S => self.north(),
+            Direction::SW => self.northeast(),
+            Direction::W => self.east(),
+            Direction::NW => self.southeast(),
+        }
+    }
+}
+
+impl<T> Sub<&Direction> for Point<T>
+where
+    T: Sized
+        + Copy
+        + Sub<Output = T>
+        + Add<Output = T>
+        + AddAssign
+        + Eq
+        + PartialEq
+        + std::hash::Hash
+        + Default
+        + Step,
+{
+    type Output = Self;
+
+    fn sub(self, rhs: &Direction) -> Self::Output {
+        match rhs {
+            Direction::N => self.south(),
+            Direction::NE => self.southwest(),
+            Direction::E => self.west(),
+            Direction::SE => self.northwest(),
+            Direction::S => self.north(),
+            Direction::SW => self.northeast(),
+            Direction::W => self.east(),
+            Direction::NW => self.southeast(),
         }
     }
 }

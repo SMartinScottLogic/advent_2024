@@ -1,7 +1,8 @@
+#![feature(let_chains)]
 use std::io::{BufRead, BufReader};
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};
-use utils::Matrix;
+use utils::{Direction, Matrix, Point};
 
 pub type ResultType = u64;
 
@@ -39,16 +40,12 @@ impl utils::Solution for Solution {
         for sy in self.grid.min_y()..=self.grid.max_y() {
             for sx in self.grid.min_x()..=self.grid.max_x() {
                 if let Some('X') = self.grid.get(sx, sy) {
-                    total += self.walk(sx + 1, sy, 1, 0, "X", "XMAS");
-                    total += self.walk(sx + 1, sy + 1, 1, 1, "X", "XMAS");
-                    total += self.walk(sx, sy + 1, 0, 1, "X", "XMAS");
-                    total += self.walk(sx - 1, sy + 1, -1, 1, "X", "XMAS");
-                    total += self.walk(sx - 1, sy, -1, 0, "X", "XMAS");
-                    total += self.walk(sx - 1, sy - 1, -1, -1, "X", "XMAS");
-                    total += self.walk(sx, sy - 1, 0, -1, "X", "XMAS");
-                    total += self.walk(sx + 1, sy - 1, 1, -1, "X", "XMAS");
-                    if total > 0 {
-                        debug!(sx, sy, total, "found");
+                    for delta in Direction::iter() {
+                        let pos = Point::new(sx, sy) + &delta;
+                        if self.walk(pos, &delta, "X", "XMAS") {
+                            total += 1;
+                            debug!(sx, sy, total, "found");
+                        }
                     }
                 }
             }
@@ -61,23 +58,20 @@ impl utils::Solution for Solution {
         let mut total = 0;
         for sy in self.grid.min_y()..=self.grid.max_y() {
             for sx in self.grid.min_x()..=self.grid.max_x() {
+                let start = Point::new(sx, sy);
                 if let Some('M') = self.grid.get(sx, sy) {
-                    for (dx, dy, nd) in [
-                        (1, -1, [(1, 1), (-1, -1)]),
-                        (1, 1, [(1, -1), (-1, 1)]),
-                        (-1, 1, [(1, 1), (-1, -1)]),
-                        (-1, -1, [(1, -1), (-1, 1)]),
+                    for (delta, next_deltas) in [
+                        (Direction::NE, [Direction::SE, Direction::NW]),
+                        (Direction::SE, [Direction::NE, Direction::SW]),
+                        (Direction::SW, [Direction::SE, Direction::NW]),
+                        (Direction::NW, [Direction::NE, Direction::SW]),
                     ] {
-                        let c1 = self.walk(sx + dx, sy + dy, dx, dy, "M", "MAS");
-                        if c1 > 0 {
-                            for (ndx, ndy) in nd {
-                                let nsx = sx + dx - ndx;
-                                let nsy = sy + dy - ndy;
-                                if let Some('M') = self.grid.get(nsx, nsy) {
-                                    let c2 = self.walk(nsx + ndx, nsy + ndy, ndx, ndy, "M", "MAS");
-                                    if c2 > 0 {
-                                        debug!(sx, sy, dx, dy, c1, nsx, nsy, ndx, ndy, c2, "ns");
-                                        total += c1 * c2;
+                        if self.walk(start + &delta, &delta, "M", "MAS") {
+                            for next_delta in next_deltas {
+                                let new_start = start + &delta - &next_delta;
+                                if let Some('M') = self.grid.get(new_start.x(), new_start.y()) {
+                                    if self.walk(new_start + &next_delta, &next_delta, "M", "MAS") {
+                                        total += 1;
                                     }
                                 }
                             }
@@ -92,22 +86,19 @@ impl utils::Solution for Solution {
 }
 
 impl Solution {
-    fn walk(&self, x: isize, y: isize, dx: isize, dy: isize, s: &str, target: &str) -> ResultType {
-        if let Some(c) = self.grid.get(x, y) {
-            if *c == target.chars().nth(s.len()).unwrap() {
-                if target.len() == s.len() + 1 {
-                    1
-                } else {
-                    let mut s = s.to_owned();
-                    s.push(*c);
-                    self.walk(x + dx, y + dy, dx, dy, &s, target)
-                }
+    fn walk(&self, pos: Point<isize>, delta: &Direction, s: &str, target: &str) -> bool {
+        if let Some(c) = self.grid.get(pos.x(), pos.y())
+            && *c == target.chars().nth(s.len()).unwrap()
+        {
+            if target.len() == s.len() + 1 {
+                true
             } else {
-                0
+                let mut s = s.to_owned();
+                s.push(*c);
+                self.walk(pos + delta, delta, &s, target)
             }
         } else {
-            0
+            false
         }
     }
 }
-
