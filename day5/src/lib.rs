@@ -1,6 +1,5 @@
 use std::{
-    collections::HashSet,
-    io::{BufRead, BufReader},
+    cmp::Ordering, collections::HashSet, io::{BufRead, BufReader}
 };
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};
@@ -99,18 +98,13 @@ impl Solution {
         true
     }
 
-    fn fix(&self, arr: &mut Vec<ResultType>) {
-        let mut swapped = true;
-
-        while swapped {
-            swapped = false;
-            for i in 0..arr.len() - 1 {
-                if self.rules.contains(&(arr[i + 1], arr[i])) {
-                    debug!("volation in {:?}: {} after {}", arr, arr[i + 1], arr[i]);
-                    arr.swap(i, i + 1);
-                    swapped = true;
-                }
+    fn fix(&self, arr: &mut [ResultType]) {
+        arr.sort_by(|a, b| {
+            if self.rules.contains(&(*b, *a)) {
+                Ordering::Greater
+            } else {
+                Ordering::Less
             }
-        }
+        });
     }
 }
