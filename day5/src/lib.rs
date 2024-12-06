@@ -1,4 +1,5 @@
 use std::{
+    cmp::Ordering,
     collections::HashSet,
     io::{BufRead, BufReader},
 };
@@ -9,11 +10,11 @@ pub type ResultType = u64;
 
 #[derive(Debug, Default)]
 pub struct Solution {
-    rules: HashSet<String>,
+    rules: HashSet<(ResultType, ResultType)>,
     updates: Vec<Vec<ResultType>>,
 }
 impl Solution {
-    fn add_rule(&mut self, rule: String) {
+    fn add_rule(&mut self, rule: (ResultType, ResultType)) {
         self.rules.insert(rule);
     }
 
@@ -36,7 +37,10 @@ impl<T: std::io::Read> TryFrom<BufReader<T>> for Solution {
                 continue;
             }
             if stage == 0 {
-                solution.add_rule(line.to_string());
+                let (lhs, rhs) = line.split_once('|').unwrap();
+                let lhs = lhs.parse().unwrap();
+                let rhs = rhs.parse().unwrap();
+                solution.add_rule((lhs, rhs));
             }
             if stage == 1 {
                 let update = line.split(',').map(|v| v.parse().unwrap()).collect();
@@ -88,8 +92,7 @@ impl Solution {
         for (i, page) in update.iter().enumerate() {
             for j in 0..i {
                 let probe = update.get(j).unwrap();
-                let v = format!("{}|{}", page, probe);
-                if self.rules.contains(&v) {
+                if self.rules.contains(&(*page, *probe)) {
                     return false;
                 }
             }
@@ -97,25 +100,13 @@ impl Solution {
         true
     }
 
-    fn fix(&self, arr: &mut Vec<ResultType>) {
-        let mut swapped = true;
-
-        while swapped {
-            swapped = false;
-            for i in 0..arr.len() - 1 {
-                let v = format!("{}|{}", arr[i + 1], arr[i]);
-                if self.rules.contains(&v) {
-                    debug!(
-                        "volation in {:?}: {} after {}: {}",
-                        arr,
-                        arr[i + 1],
-                        arr[i],
-                        v
-                    );
-                    arr.swap(i, i + 1);
-                    swapped = true;
-                }
+    fn fix(&self, arr: &mut [ResultType]) {
+        arr.sort_by(|a, b| {
+            if self.rules.contains(&(*b, *a)) {
+                Ordering::Greater
+            } else {
+                Ordering::Less
             }
-        }
+        });
     }
 }

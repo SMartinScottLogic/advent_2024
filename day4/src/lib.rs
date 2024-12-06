@@ -43,7 +43,7 @@ impl utils::Solution for Solution {
                 let pos = Point::new(sx, sy);
                 if let Some('X') = self.grid.get(&pos) {
                     for delta in Direction::iter() {
-                        let pos = Point::new(sx, sy) + &delta;
+                        let pos = Point::new(sx, sy) + delta;
                         if self.walk(pos, &delta, "X", "XMAS") {
                             total += 1;
                             debug!(sx, sy, total, "found");
@@ -69,11 +69,11 @@ impl utils::Solution for Solution {
                         (Direction::SW, [Direction::SE, Direction::NW]),
                         (Direction::NW, [Direction::NE, Direction::SW]),
                     ] {
-                        if self.walk(start + &delta, &delta, "M", "MAS") {
+                        if self.walk(start + delta, &delta, "M", "MAS") {
                             for next_delta in next_deltas {
-                                let new_start = start + &delta - &next_delta;
+                                let new_start = start + delta - next_delta;
                                 if let Some('M') = self.grid.get(&new_start) {
-                                    if self.walk(new_start + &next_delta, &next_delta, "M", "MAS") {
+                                    if self.walk(new_start + next_delta, &next_delta, "M", "MAS") {
                                         total += 1;
                                     }
                                 }

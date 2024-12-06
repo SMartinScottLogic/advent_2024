@@ -15,3 +15,8 @@ Cargo.lock
 
 # Ignore input files
 input/
+
+# Ignore flamegraph files
+flamegraph.svg
+perf.data
+perf.data.old
