@@ -2,6 +2,8 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter; // 0.17.1
 
 #[derive(Debug, EnumIter)]
+#[derive(Hash, PartialEq, Eq)]
+#[derive(Clone, Copy)]
 pub enum Direction {
     N,
     NE,

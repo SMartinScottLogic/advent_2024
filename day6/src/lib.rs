@@ -1,4 +1,4 @@
-use std::{collections::HashSet, io::{BufRead, BufReader}};
+use std::{collections::{HashMap, HashSet}, io::{BufRead, BufReader}};
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};
 use utils::{Direction, Grid, Point};
@@ -47,7 +47,7 @@ impl utils::Solution for Solution {
         let mut visited = HashSet::new();
         loop {
             visited.insert((guard_pos.x(), guard_pos.y()));
-            info!(steps, ?guard_pos, ?direction, "stage");
+            debug!(steps, ?guard_pos, ?direction, "stage");
             let front_pos = match direction {
                 Direction::N => guard_pos.north(),
                 Direction::E => guard_pos.east(),
@@ -82,8 +82,53 @@ impl utils::Solution for Solution {
     }
 
     fn answer_part2(&self, _is_full: bool) -> Self::Result {
-        // Implement for problem
-        Ok(0)
+                // Implement for problem
+                let mut steps = 0;
+                let mut guard_pos = self.find_guard();
+                let mut direction = Direction::N;
+                let mut visited = HashSet::new();
+                loop {
+                    visited.insert(guard_pos);
+                    debug!(steps, ?guard_pos, ?direction, "stage");
+                    let front_pos = match direction {
+                        Direction::N => guard_pos.north(),
+                        Direction::E => guard_pos.east(),
+                        Direction::S => guard_pos.south(),
+                        Direction::W => guard_pos.west(),
+                        _ => panic!("unexpected direction {:?}", direction)
+                    };
+                    match match self.grid.get(&front_pos) {
+                        Some('.') => Decision::Step,
+                        Some('#') => Decision::Turn,
+                        // Guard can't stand in front of themselves
+                        Some('^') => Decision::Step,
+                        Some(c) => panic!("Unknown entry in grid: {}", c),
+                        None => break,
+                    } {
+                        Decision::Step => {
+                            steps += 1;
+                            guard_pos = front_pos;
+                        },
+                        Decision::Turn => {
+                            direction = match direction {
+                                Direction::N => Direction::E,
+                                Direction::E => Direction::S,
+                                Direction::S => Direction::W,
+                                Direction::W => Direction::N,
+                                _ => panic!("unexpected direction {:?}", direction)        
+                            }
+                        }
+                    }
+                }
+                let mut loop_obstacles = HashSet::new();
+                for (i, position) in visited.iter().enumerate() {
+                    debug!(i, ?position, "test");
+                    if self.induces_loop(position) {
+                        loop_obstacles.insert(position);
+                    }
+                }
+                Ok(loop_obstacles.len() as ResultType)
+
     }
 }
 
@@ -98,6 +143,53 @@ impl Solution {
             }
         }
     panic!("No guard!");
+    }
+
+    fn induces_loop(&self, additional_obstacle: &Point<isize>) -> bool {
+        // Implement for problem
+        let mut steps = 0;
+        let mut guard_pos = self.find_guard();
+        if &guard_pos == additional_obstacle {
+            return false;
+        }
+        let mut direction = Direction::N;
+        let mut visited: HashMap<(isize, isize), HashSet<Direction>> = HashMap::new();
+        loop {
+            if !visited.entry((guard_pos.x(), guard_pos.y())).or_default().insert(direction) {
+                break true;
+            }
+            debug!(steps, ?guard_pos, ?direction, "stage");
+            let front_pos = match direction {
+                Direction::N => guard_pos.north(),
+                Direction::E => guard_pos.east(),
+                Direction::S => guard_pos.south(),
+                Direction::W => guard_pos.west(),
+                _ => panic!("unexpected direction {:?}", direction)
+            };
+            match match self.grid.get(&front_pos) {
+                _ if &front_pos == additional_obstacle => Decision::Turn,
+                Some('.') => Decision::Step,
+                Some('#') => Decision::Turn,
+                // Guard can't stand in front of themselves
+                Some('^') => Decision::Step,
+                Some(c) => panic!("Unknown entry in grid: {}", c),
+                None => break false,
+            } {
+                Decision::Step => {
+                    steps += 1;
+                    guard_pos = front_pos;
+                },
+                Decision::Turn => {
+                    direction = match direction {
+                        Direction::N => Direction::E,
+                        Direction::E => Direction::S,
+                        Direction::S => Direction::W,
+                        Direction::W => Direction::N,
+                        _ => panic!("unexpected direction {:?}", direction)        
+                    }
+                }
+            }
+        }
     }
 }
 #[cfg(test)]
