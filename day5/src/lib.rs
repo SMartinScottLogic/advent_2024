@@ -1,5 +1,7 @@
 use std::{
-    cmp::Ordering, collections::HashSet, io::{BufRead, BufReader}
+    cmp::Ordering,
+    collections::HashSet,
+    io::{BufRead, BufReader},
 };
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};

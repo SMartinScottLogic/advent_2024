@@ -1,4 +1,7 @@
-use std::{collections::{HashMap, HashSet}, io::{BufRead, BufReader}};
+use std::{
+    collections::{HashMap, HashSet},
+    io::{BufRead, BufReader},
+};
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};
 use utils::{Direction, Grid, Point};
@@ -41,94 +44,22 @@ impl utils::Solution for Solution {
 
     fn answer_part1(&self, _is_full: bool) -> Self::Result {
         // Implement for problem
-        let mut steps = 0;
-        let mut guard_pos = self.find_guard();
-        let mut direction = Direction::N;
-        let mut visited = HashSet::new();
-        loop {
-            visited.insert((guard_pos.x(), guard_pos.y()));
-            debug!(steps, ?guard_pos, ?direction, "stage");
-            let front_pos = match direction {
-                Direction::N => guard_pos.north(),
-                Direction::E => guard_pos.east(),
-                Direction::S => guard_pos.south(),
-                Direction::W => guard_pos.west(),
-                _ => panic!("unexpected direction {:?}", direction)
-            };
-            match match self.grid.get(&front_pos) {
-                Some('.') => Decision::Step,
-                Some('#') => Decision::Turn,
-                // Guard can't stand in front of themselves
-                Some('^') => Decision::Step,
-                Some(c) => panic!("Unknown entry in grid: {}", c),
-                None => break,
-            } {
-                Decision::Step => {
-                    steps += 1;
-                    guard_pos = front_pos;
-                },
-                Decision::Turn => {
-                    direction = match direction {
-                        Direction::N => Direction::E,
-                        Direction::E => Direction::S,
-                        Direction::S => Direction::W,
-                        Direction::W => Direction::N,
-                        _ => panic!("unexpected direction {:?}", direction)        
-                    }
-                }
-            }
-        }
+        let (looped, visited) = self.analyse(None);
+        assert!(!looped);
         Ok(visited.len() as ResultType)
     }
 
     fn answer_part2(&self, _is_full: bool) -> Self::Result {
-                // Implement for problem
-                let mut steps = 0;
-                let mut guard_pos = self.find_guard();
-                let mut direction = Direction::N;
-                let mut visited = HashSet::new();
-                loop {
-                    visited.insert(guard_pos);
-                    debug!(steps, ?guard_pos, ?direction, "stage");
-                    let front_pos = match direction {
-                        Direction::N => guard_pos.north(),
-                        Direction::E => guard_pos.east(),
-                        Direction::S => guard_pos.south(),
-                        Direction::W => guard_pos.west(),
-                        _ => panic!("unexpected direction {:?}", direction)
-                    };
-                    match match self.grid.get(&front_pos) {
-                        Some('.') => Decision::Step,
-                        Some('#') => Decision::Turn,
-                        // Guard can't stand in front of themselves
-                        Some('^') => Decision::Step,
-                        Some(c) => panic!("Unknown entry in grid: {}", c),
-                        None => break,
-                    } {
-                        Decision::Step => {
-                            steps += 1;
-                            guard_pos = front_pos;
-                        },
-                        Decision::Turn => {
-                            direction = match direction {
-                                Direction::N => Direction::E,
-                                Direction::E => Direction::S,
-                                Direction::S => Direction::W,
-                                Direction::W => Direction::N,
-                                _ => panic!("unexpected direction {:?}", direction)        
-                            }
-                        }
-                    }
-                }
-                let mut loop_obstacles = HashSet::new();
-                for (i, position) in visited.iter().enumerate() {
-                    debug!(i, ?position, "test");
-                    if self.induces_loop(position) {
-                        loop_obstacles.insert(position);
-                    }
-                }
-                Ok(loop_obstacles.len() as ResultType)
-
+        // Implement for problem
+        let (_, visited) = self.analyse(None);
+        let mut loop_obstacles = HashSet::new();
+        for (i, (position, ..)) in visited.iter().enumerate() {
+            debug!(i, ?position, "test");
+            if self.analyse(Some(*position)).0 {
+                loop_obstacles.insert(position);
+            }
+        }
+        Ok(loop_obstacles.len() as ResultType)
     }
 }
 
@@ -142,21 +73,24 @@ impl Solution {
                 }
             }
         }
-    panic!("No guard!");
+        panic!("No guard!");
     }
 
-    fn induces_loop(&self, additional_obstacle: &Point<isize>) -> bool {
+    fn analyse(
+        &self,
+        additional_obstacle: Option<Point<isize>>,
+    ) -> (bool, HashMap<Point<isize>, HashSet<Direction>>) {
         // Implement for problem
         let mut steps = 0;
         let mut guard_pos = self.find_guard();
-        if &guard_pos == additional_obstacle {
-            return false;
+        let mut visited: HashMap<Point<isize>, HashSet<Direction>> = HashMap::new();
+        if matches!(additional_obstacle, Some(p) if p == guard_pos) {
+            return (false, visited);
         }
         let mut direction = Direction::N;
-        let mut visited: HashMap<(isize, isize), HashSet<Direction>> = HashMap::new();
         loop {
-            if !visited.entry((guard_pos.x(), guard_pos.y())).or_default().insert(direction) {
-                break true;
+            if !visited.entry(guard_pos).or_default().insert(direction) {
+                break (true, visited);
             }
             debug!(steps, ?guard_pos, ?direction, "stage");
             let front_pos = match direction {
@@ -164,48 +98,31 @@ impl Solution {
                 Direction::E => guard_pos.east(),
                 Direction::S => guard_pos.south(),
                 Direction::W => guard_pos.west(),
-                _ => panic!("unexpected direction {:?}", direction)
+                _ => panic!("unexpected direction {:?}", direction),
             };
             match match self.grid.get(&front_pos) {
-                _ if &front_pos == additional_obstacle => Decision::Turn,
+                _ if additional_obstacle.map(|p| front_pos == p).unwrap_or(false) => Decision::Turn,
                 Some('.') => Decision::Step,
                 Some('#') => Decision::Turn,
                 // Guard can't stand in front of themselves
                 Some('^') => Decision::Step,
                 Some(c) => panic!("Unknown entry in grid: {}", c),
-                None => break false,
+                None => break (false, visited),
             } {
                 Decision::Step => {
                     steps += 1;
                     guard_pos = front_pos;
-                },
+                }
                 Decision::Turn => {
                     direction = match direction {
                         Direction::N => Direction::E,
                         Direction::E => Direction::S,
                         Direction::S => Direction::W,
                         Direction::W => Direction::N,
-                        _ => panic!("unexpected direction {:?}", direction)        
+                        _ => panic!("unexpected direction {:?}", direction),
                     }
                 }
             }
         }
-    }
-}
-#[cfg(test)]
-mod test {
-    use super::*;
-    use std::io::BufReader;
-
-    use tracing_test::traced_test;
-    use utils::Solution;
-
-    #[test]
-    #[traced_test]
-    fn read() {
-        let input = "replace for problem";
-        let r = BufReader::new(input.as_bytes());
-        let s = crate::Solution::try_from(r).unwrap();
-        assert_eq!(0 as ResultType, s.answer_part1(false).unwrap());
     }
 }
