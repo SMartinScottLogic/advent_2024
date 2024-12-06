@@ -4,7 +4,7 @@ use std::{
 };
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};
-use utils::{Direction, Grid, Point};
+use utils::{DenseGrid, Direction, SparseGrid, Point};
 
 pub type ResultType = u64;
 
@@ -15,13 +15,10 @@ enum Decision {
 }
 #[derive(Debug, Default)]
 pub struct Solution {
-    grid: Grid<char, isize>,
+    grid: DenseGrid<char>,
     guard_pos: Point<isize>,
 }
 impl Solution {
-    fn set(&mut self, x: usize, y: usize, c: char) {
-        self.grid.set(&Point::new(x as isize, y as isize), c);
-    }
 }
 
 #[allow(unused_variables, unused_mut)]
@@ -31,10 +28,7 @@ impl<T: std::io::Read> TryFrom<BufReader<T>> for Solution {
     fn try_from(reader: BufReader<T>) -> Result<Self, Self::Error> {
         let mut solution = Self::default();
         for (y, line) in reader.lines().map_while(Result::ok).enumerate() {
-            // Implement for problem
-            for (x, c) in line.chars().enumerate() {
-                solution.set(x, y, c);
-            }
+            solution.grid.push(line.chars().collect());
         }
         Ok(solution)
     }
@@ -44,10 +38,9 @@ impl utils::Solution for Solution {
     fn analyse(&mut self, _is_full: bool) {
         self.guard_pos = self
             .grid
-            .iter()
-            .filter(|(_point, c)| *c == &'^')
-            .map(|(point, _c)| point)
-            .cloned()
+            .cells()
+            .filter(|(_x, _y, c)| *c == &'^')
+            .map(|(x, y, _c)| Point::new(x as isize, y as isize))
             .next()
             .unwrap();
     }
@@ -89,6 +82,7 @@ impl Solution {
         mut direction: Direction,
         additional_obstacle: Option<Point<isize>>,
     ) -> (bool, HashMap<Point<isize>, HashSet<Direction>>, HashMap<Point<isize>, Direction>) {
+
         // Implement for problem
         let mut steps = 0;
         //let mut guard_pos = self.guard_pos;
@@ -110,7 +104,7 @@ impl Solution {
                 Direction::W => guard_pos.west(),
                 _ => panic!("unexpected direction {:?}", direction),
             };
-            match match self.grid.get(&front_pos) {
+            match match self.grid.get(front_pos.x(), front_pos.y()) {
                 _ if additional_obstacle.map(|p| front_pos == p).unwrap_or(false) => Decision::Turn,
                 Some('.') => Decision::Step,
                 Some('#') => Decision::Turn,

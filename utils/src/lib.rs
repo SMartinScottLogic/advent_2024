@@ -9,7 +9,7 @@ mod runner;
 mod solution;
 
 pub use direction::Direction;
-pub use grid::Grid;
+pub use grid::{SparseGrid, DenseGrid};
 pub use matrix::Matrix;
 pub use point::Point;
 pub use runner::{log_init, run, BaseName};
