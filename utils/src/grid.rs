@@ -92,7 +92,8 @@ where
         + AddAssign
         + Eq
         + PartialEq
-        + Hash,
+        + Hash
+        + Step,
 {
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
@@ -172,6 +173,10 @@ where
             println!("{line}");
         }
     }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&Point<V>, &T)> {
+        self.data.iter()
+    }
 }
 
 #[cfg(test)]
@@ -195,5 +200,13 @@ mod tests {
         assert_eq!(1, *dim.x.end());
         assert_eq!(1, *dim.x.start());
         assert_eq!(1, *dim.y.end());
+    }
+
+    #[test]
+    fn iter() {
+        let mut grid = Grid::new();
+        grid.set(&Point::new(1, 1), 1);
+        grid.set(&Point::new(2, 2), 2);
+        assert_eq!(2, grid.iter().count());
     }
 }

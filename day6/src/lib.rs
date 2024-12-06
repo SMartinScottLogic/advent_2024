@@ -16,6 +16,7 @@ enum Decision {
 #[derive(Debug, Default)]
 pub struct Solution {
     grid: Grid<char, isize>,
+    guard_pos: Point<isize>,
 }
 impl Solution {
     fn set(&mut self, x: usize, y: usize, c: char) {
@@ -40,7 +41,16 @@ impl<T: std::io::Read> TryFrom<BufReader<T>> for Solution {
 }
 impl utils::Solution for Solution {
     type Result = anyhow::Result<ResultType>;
-    fn analyse(&mut self, _is_full: bool) {}
+    fn analyse(&mut self, _is_full: bool) {
+        self.guard_pos = self
+            .grid
+            .iter()
+            .filter(|(_point, c)| *c == &'^')
+            .map(|(point, _c)| point)
+            .cloned()
+            .next()
+            .unwrap();
+    }
 
     fn answer_part1(&self, _is_full: bool) -> Self::Result {
         // Implement for problem
@@ -64,25 +74,13 @@ impl utils::Solution for Solution {
 }
 
 impl Solution {
-    fn find_guard(&self) -> Point<isize> {
-        // find position of guard
-        for y in self.grid.dimensions().y.clone() {
-            for x in self.grid.dimensions().x.clone() {
-                if let Some('^') = self.grid.get(&Point::new(x, y)) {
-                    return Point::new(x, y);
-                }
-            }
-        }
-        panic!("No guard!");
-    }
-
     fn analyse(
         &self,
         additional_obstacle: Option<Point<isize>>,
     ) -> (bool, HashMap<Point<isize>, HashSet<Direction>>) {
         // Implement for problem
         let mut steps = 0;
-        let mut guard_pos = self.find_guard();
+        let mut guard_pos = self.guard_pos;
         let mut visited: HashMap<Point<isize>, HashSet<Direction>> = HashMap::new();
         if matches!(additional_obstacle, Some(p) if p == guard_pos) {
             return (false, visited);
