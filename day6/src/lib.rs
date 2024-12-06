@@ -54,18 +54,27 @@ impl utils::Solution for Solution {
 
     fn answer_part1(&self, _is_full: bool) -> Self::Result {
         // Implement for problem
-        let (looped, visited) = self.analyse(None);
+        let (looped, visited, ..) = self.analyse(self.guard_pos, Direction::N, None);
         assert!(!looped);
         Ok(visited.len() as ResultType)
     }
 
     fn answer_part2(&self, _is_full: bool) -> Self::Result {
         // Implement for problem
-        let (_, visited) = self.analyse(None);
+        let (_, visited, first_visited) = self.analyse(self.guard_pos, Direction::N, None);
+        debug!(?first_visited, "first_visits");
         let mut loop_obstacles = HashSet::new();
         for (i, (position, ..)) in visited.iter().enumerate() {
             debug!(i, ?position, "test");
-            if self.analyse(Some(*position)).0 {
+            let direction = first_visited.get(position).unwrap();
+            let guard_pos = match direction {
+                Direction::N => position.south(),
+                Direction::E => position.west(),
+                Direction::S => position.north(),
+                Direction::W => position.east(),
+                _ => panic!()
+            };
+            if self.analyse(guard_pos, *direction, Some(*position)).0 {
                 loop_obstacles.insert(position);
             }
         }
@@ -76,19 +85,22 @@ impl utils::Solution for Solution {
 impl Solution {
     fn analyse(
         &self,
+        mut guard_pos: Point<isize>,
+        mut direction: Direction,
         additional_obstacle: Option<Point<isize>>,
-    ) -> (bool, HashMap<Point<isize>, HashSet<Direction>>) {
+    ) -> (bool, HashMap<Point<isize>, HashSet<Direction>>, HashMap<Point<isize>, Direction>) {
         // Implement for problem
         let mut steps = 0;
-        let mut guard_pos = self.guard_pos;
+        //let mut guard_pos = self.guard_pos;
         let mut visited: HashMap<Point<isize>, HashSet<Direction>> = HashMap::new();
+        let mut first_visited = HashMap::new();
         if matches!(additional_obstacle, Some(p) if p == guard_pos) {
-            return (false, visited);
+            return (false, visited, first_visited);
         }
-        let mut direction = Direction::N;
+        //let mut direction = Direction::N;
         loop {
             if !visited.entry(guard_pos).or_default().insert(direction) {
-                break (true, visited);
+                break (true, visited, first_visited);
             }
             debug!(steps, ?guard_pos, ?direction, "stage");
             let front_pos = match direction {
@@ -105,10 +117,11 @@ impl Solution {
                 // Guard can't stand in front of themselves
                 Some('^') => Decision::Step,
                 Some(c) => panic!("Unknown entry in grid: {}", c),
-                None => break (false, visited),
+                None => break (false, visited, first_visited),
             } {
                 Decision::Step => {
                     steps += 1;
+                    first_visited.entry(front_pos).or_insert(direction);
                     guard_pos = front_pos;
                 }
                 Decision::Turn => {
