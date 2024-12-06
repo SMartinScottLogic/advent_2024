@@ -1,8 +1,5 @@
-use std::{
-    collections::HashSet,
-    io::{BufRead, BufReader},
-};
 use array2d::Array2D;
+use std::io::{BufRead, BufReader};
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};
 use utils::{Direction, Point};
@@ -19,8 +16,7 @@ pub struct Solution {
     grid: array2d::Array2D<char>,
     guard_pos: Point<isize>,
 }
-impl Solution {
-}
+impl Solution {}
 
 #[allow(unused_variables, unused_mut)]
 impl<T: std::io::Read> TryFrom<BufReader<T>> for Solution {
@@ -33,7 +29,7 @@ impl<T: std::io::Read> TryFrom<BufReader<T>> for Solution {
         }
         let solution = Solution {
             grid: Array2D::from_columns(&rows).unwrap(),
-            guard_pos: Point::default()
+            guard_pos: Point::default(),
         };
         Ok(solution)
     }
@@ -52,36 +48,46 @@ impl utils::Solution for Solution {
 
     fn answer_part1(&self, _is_full: bool) -> Self::Result {
         // Implement for problem
-        let (looped, visited, ..) = self.analyse(self.guard_pos, Direction::N, None);
+        let AnalyseResult(looped, visited, ..) = self.analyse(self.guard_pos, Direction::N, None);
         assert!(!looped);
         //panic!();
-        Ok(visited.elements_row_major_iter().filter(|v| !v.is_empty()).count() as ResultType)
+        Ok(visited
+            .elements_row_major_iter()
+            .filter(|v| v[0].is_some())
+            .count() as ResultType)
     }
 
     fn answer_part2(&self, _is_full: bool) -> Self::Result {
         // Implement for problem
-        let (_, visited, first_visited) = self.analyse(self.guard_pos, Direction::N, None);
+        let mut count = 0;
+        let AnalyseResult(_, visited, first_visited) =
+            self.analyse(self.guard_pos, Direction::N, None);
         debug!(?first_visited, "first_visits");
-        let mut loop_obstacles = HashSet::new();
         for (i, (position, ..)) in visited.enumerate_row_major().enumerate() {
             let position = Point::new(position.0 as isize, position.1 as isize);
             debug!(i, ?position, "test");
             if let Some(direction) = Self::get(&first_visited, position).unwrap() {
-            let guard_pos = match direction {
-                Direction::N => position.south(),
-                Direction::E => position.west(),
-                Direction::S => position.north(),
-                Direction::W => position.east(),
-                _ => panic!()
-            };
-            if self.analyse(guard_pos, *direction, Some(position)).0 {
-                loop_obstacles.insert(position);
-            }
+                let guard_pos = match direction {
+                    Direction::N => position.south(),
+                    Direction::E => position.west(),
+                    Direction::S => position.north(),
+                    Direction::W => position.east(),
+                    _ => panic!(),
+                };
+                if self.analyse(guard_pos, *direction, Some(position)).0 {
+                    count += 1;
+                }
             }
         }
-        Ok(loop_obstacles.len() as ResultType)
+        Ok(count)
     }
 }
+
+struct AnalyseResult(
+    bool,
+    Array2D<[Option<Direction>; 4]>,
+    Array2D<Option<Direction>>,
+);
 
 impl Solution {
     fn analyse(
@@ -89,23 +95,39 @@ impl Solution {
         mut guard_pos: Point<isize>,
         mut direction: Direction,
         additional_obstacle: Option<Point<isize>>,
-    ) -> (bool, Array2D<HashSet<Direction>>, Array2D<Option<Direction>>) {
-
+    ) -> AnalyseResult {
         // Implement for problem
         let mut steps = 0;
-        //let mut guard_pos = self.guard_pos;
-        let mut visited = Array2D::filled_with(HashSet::new(), self.grid.num_rows(), self.grid.num_columns());
-        let mut first_visited = Array2D::filled_with(None, self.grid.num_rows(), self.grid.num_columns());
+        let mut visited =
+            Array2D::filled_with([None; 4], self.grid.num_rows(), self.grid.num_columns());
+        let mut first_visited =
+            Array2D::filled_with(None, self.grid.num_rows(), self.grid.num_columns());
         if matches!(additional_obstacle, Some(p) if p == guard_pos) {
-            return (false, visited, first_visited);
+            return AnalyseResult(false, visited, first_visited);
         }
-        //let mut direction = Direction::N;
         loop {
-            if !if let Some(v) = Self::get_mut(&mut visited, guard_pos) {
-                v.insert(direction)
-            } else {true} {
-                break (true, visited, first_visited);
+            if let Some(v) = Self::get_mut(&mut visited, guard_pos) {
+                let mut found = false;
+                let mut insert = None;
+                for (i, v) in v.iter().enumerate() {
+                    match v {
+                        Some(d) if d == &direction => {
+                            found = true;
+                            break;
+                        }
+                        None if insert.is_none() => {
+                            insert = Some(i);
+                        }
+                        _ => {}
+                    }
+                }
+                if found {
+                    return AnalyseResult(true, visited, first_visited);
+                } else {
+                    v[insert.unwrap()] = Some(direction);
+                }
             }
+
             debug!(steps, ?guard_pos, ?direction, "stage");
             let front_pos = match direction {
                 Direction::N => guard_pos.north(),
@@ -121,7 +143,7 @@ impl Solution {
                 // Guard can't stand in front of themselves
                 Some('^') => Decision::Step,
                 Some(c) => panic!("Unknown entry in grid: {}", c),
-                None => break (false, visited, first_visited),
+                None => break AnalyseResult(false, visited, first_visited),
             } {
                 Decision::Step => {
                     steps += 1;
