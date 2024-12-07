@@ -76,7 +76,7 @@ fn evaluate(values: &[ResultType], operators: &[char], is_part2: bool) -> Result
         answer = match operator {
             '*' => answer * rhs,
             '+' => answer + rhs,
-            '|' if is_part2 => format!("{}{}", answer, rhs).parse().unwrap(),
+            '|' if is_part2 => concatenate(answer, rhs),
             _ => panic!(),
         }
     }
@@ -118,4 +118,15 @@ fn test_all_up_to(
         }
     }
     false
+}
+
+fn concatenate(lhs: ResultType, rhs: ResultType) -> ResultType {
+    let mut scale = 10;
+    loop {
+        if rhs < scale {
+            break;
+        }
+        scale *= 10;
+    }
+    rhs + scale * lhs
 }
