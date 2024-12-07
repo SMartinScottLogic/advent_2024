@@ -26,7 +26,7 @@ where
 }
 
 #[derive(Debug, Clone)]
-pub struct Grid<T, V>
+pub struct SparseGrid<T, V>
 where
     V: Default
         + Sized
@@ -41,7 +41,7 @@ where
     data: HashMap<Point<V>, T>,
     range: Range<V>,
 }
-impl<T, V> Grid<T, V>
+impl<T, V> SparseGrid<T, V>
 where
     T: Default + Display + Clone,
     V: Default
@@ -62,7 +62,7 @@ where
         }
     }
 }
-impl<T, V> Default for Grid<T, V>
+impl<T, V> Default for SparseGrid<T, V>
 where
     T: Default + Display + Clone,
     V: Default
@@ -81,7 +81,7 @@ where
     }
 }
 
-impl<T, V> Grid<T, V>
+impl<T, V> SparseGrid<T, V>
 where
     T: Default + Display + Clone,
     V: Default
@@ -92,7 +92,8 @@ where
         + AddAssign
         + Eq
         + PartialEq
-        + Hash,
+        + Hash
+        + Step,
 {
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
@@ -172,6 +173,10 @@ where
             println!("{line}");
         }
     }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&Point<V>, &T)> {
+        self.data.iter()
+    }
 }
 
 #[cfg(test)]
@@ -180,7 +185,7 @@ mod tests {
 
     #[test]
     fn grid() {
-        let mut grid = Grid::new();
+        let mut grid = SparseGrid::new();
         grid.set(&Point::new(1, 1), 1);
         let result = grid.get(&Point::new(1, 1));
         assert_eq!(result, Some(&1i64));
@@ -188,12 +193,20 @@ mod tests {
 
     #[test]
     fn range_1() {
-        let mut grid = Grid::new();
+        let mut grid = SparseGrid::new();
         grid.set(&Point::new(1, 1), 1);
         let dim = grid.dimensions();
         assert_eq!(1, *dim.x.start());
         assert_eq!(1, *dim.x.end());
         assert_eq!(1, *dim.x.start());
         assert_eq!(1, *dim.y.end());
+    }
+
+    #[test]
+    fn iter() {
+        let mut grid = SparseGrid::new();
+        grid.set(&Point::new(1, 1), 1);
+        grid.set(&Point::new(2, 2), 2);
+        assert_eq!(2, grid.iter().count());
     }
 }

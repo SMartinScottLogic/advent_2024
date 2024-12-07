@@ -5,7 +5,7 @@ use std::{
 
 use crate::Direction;
 
-#[derive(Debug, Clone, Copy, PartialOrd, Ord, Eq, Hash, PartialEq)]
+#[derive(Default, Debug, Clone, Copy, PartialOrd, Ord, Eq, Hash, PartialEq)]
 pub struct Point<T>
 where
     T: Sized

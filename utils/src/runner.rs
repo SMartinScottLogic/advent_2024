@@ -88,6 +88,7 @@ where
     R: Display,
 {
     let mut solution = load::<S>(filename)?;
+    solution.analyse(is_full);
     info!(
         "{}{} {}: {:?}",
         Paint::mask("🎄 "),
@@ -95,7 +96,6 @@ where
         Paint::bold(&Paint::yellow("solution")),
         solution
     );
-    solution.analyse(is_full);
     span!(Level::INFO, "part1").in_scope(|| {
         match &solution.answer_part1(is_full).context("part1 failed") {
             Ok(r) => info!(

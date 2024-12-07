@@ -2,13 +2,13 @@
 use std::io::{BufRead, BufReader};
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};
-use utils::{Direction, Grid, Point};
+use utils::{Direction, Point, SparseGrid};
 
 pub type ResultType = u64;
 
 #[derive(Debug, Default)]
 pub struct Solution {
-    grid: Grid<char, isize>,
+    grid: SparseGrid<char, isize>,
 }
 impl Solution {
     fn set_character(&mut self, x: usize, y: usize, c: char) {
