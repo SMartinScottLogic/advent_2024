@@ -1,10 +1,12 @@
 use std::{
     collections::HashMap,
-    fmt::Display,
+    fmt::{Debug, Display},
     hash::Hash,
     iter::Step,
     ops::{Add, AddAssign, RangeInclusive, Sub},
 };
+
+use tracing::debug;
 
 use crate::Point;
 
@@ -85,6 +87,7 @@ impl<T, V> SparseGrid<T, V>
 where
     T: Default + Display + Clone,
     V: Default
+        + Debug
         + Sized
         + Copy
         + Sub<Output = V>
@@ -172,6 +175,23 @@ where
             }
             println!("{line}");
         }
+    }
+
+    pub fn contains(&self, point: &Point<V>) -> bool {
+        debug!(
+            "{:?} {:?} {} {} {} {}",
+            point,
+            self.range,
+            point.x() >= *self.min_x(),
+            point.x() <= *self.max_x(),
+            point.y() >= *self.min_y(),
+            point.y() <= *self.max_y()
+        );
+
+        point.x() >= *self.min_x()
+            && point.x() <= *self.max_x()
+            && point.y() >= *self.min_y()
+            && point.y() <= *self.max_y()
     }
 
     pub fn iter(&self) -> impl Iterator<Item = (&Point<V>, &T)> {
