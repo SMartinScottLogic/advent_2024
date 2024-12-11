@@ -53,32 +53,30 @@ impl utils::Solution for Solution {
 }
 
 fn num_stones(original_stones: &[ResultType], steps: usize) -> ResultType {
-    let mut stones: HashMap<ResultType, ResultType> = HashMap::new();
-    for stone in original_stones {
-        *stones.entry(*stone).or_default() += 1;
+    let mut stones = original_stones
+        .iter()
+        .fold(HashMap::new(), |mut acc, stone| {
+            *acc.entry(*stone).or_default() += 1;
+            acc
+        });
+    for _ in 0..steps {
+        stones = stones
+            .iter()
+            .fold(HashMap::new(), |mut acc, (stone, count)| {
+                if *stone == 0 {
+                    *acc.entry(1).or_default() += count;
+                } else if has_even_digits(*stone) {
+                    let (l, r) = split(*stone);
+                    *acc.entry(l).or_default() += count;
+                    *acc.entry(r).or_default() += count;
+                } else {
+                    *acc.entry(stone * 2024).or_default() += count;
+                };
+                acc
+            });
     }
-    debug!(i = 0, ?stones);
-    for i in 0..steps {
-        let mut new_stones = HashMap::new();
-        for (stone, count) in stones {
-            let ns = if stone == 0 {
-                vec![(1, count)]
-            } else if has_even_digits(stone) {
-                let (l, r) = split(stone);
-                vec![(l, count), (r, count)]
-            } else {
-                vec![(stone * 2024, count)]
-            };
-            for (s, c) in ns {
-                *new_stones.entry(s).or_default() += c;
-            }
-        }
-        stones = new_stones.clone();
-        debug!(i = i + 1, ?stones);
-    }
-    let r = stones.values().sum();
-    // Implement for problem
-    r
+
+    stones.values().sum()
 }
 
 fn has_even_digits(v: ResultType) -> bool {
