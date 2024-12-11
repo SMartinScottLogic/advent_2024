@@ -1,4 +1,7 @@
-use std::io::{BufRead, BufReader};
+use std::{
+    collections::HashMap,
+    io::{BufRead, BufReader},
+};
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};
 
@@ -7,6 +10,8 @@ pub type ResultType = u64;
 #[derive(Debug, Default)]
 pub struct Solution {
     stones: Vec<ResultType>,
+    part1_answer: ResultType,
+    part2_answer: ResultType,
 }
 impl Solution {
     fn set_stones(&mut self, stones: Vec<ResultType>) {
@@ -33,54 +38,47 @@ impl<T: std::io::Read> TryFrom<BufReader<T>> for Solution {
 }
 impl utils::Solution for Solution {
     type Result = anyhow::Result<ResultType>;
-    fn analyse(&mut self, _is_full: bool) {}
+    fn analyse(&mut self, _is_full: bool) {
+        self.part1_answer = num_stones(&self.stones, 25);
+        self.part2_answer = num_stones(&self.stones, 75);
+    }
 
     fn answer_part1(&self, _is_full: bool) -> Self::Result {
-        let mut stones = self.stones.clone();
-        info!(i = 0, ?stones);
-        for i in 0..25 {
-            let mut new_stones = Vec::new();
-            for stone in stones {
-                if stone == 0 {
-                    new_stones.push(1);
-                } else if has_even_digits(stone) {
-                    let (l, r) = split(stone);
-                    new_stones.push(l);
-                    new_stones.push(r);
-                } else {
-                    new_stones.push(stone * 2024);
-                }
-            }
-            stones = new_stones;
-            info!(i = i + 1, ?stones);
-        }
-        // Implement for problem
-        Ok(stones.len() as ResultType)
+        Ok(self.part1_answer)
     }
 
     fn answer_part2(&self, _is_full: bool) -> Self::Result {
-        let mut stones = self.stones.clone();
-        debug!(i = 0, ?stones);
-        for i in 0..10 {
-            let mut new_stones = Vec::new();
-            for stone in stones {
-                if stone == 0 {
-                    new_stones.push(1);
-                } else if has_even_digits(stone) {
-                    let (l, r) = split(stone);
-                    new_stones.push(l);
-                    new_stones.push(r);
-                } else {
-                    new_stones.push(stone * 2024);
-                }
-            }
-            stones = new_stones;
-            info!(i = i + 1, ?stones);
-            debug!(i = i + 1, num_stones = stones.len());
-        }
-        // Implement for problem
-        Ok(stones.len() as ResultType)
+        Ok(self.part2_answer)
     }
+}
+
+fn num_stones(original_stones: &[ResultType], steps: usize) -> ResultType {
+    let mut stones: HashMap<ResultType, ResultType> = HashMap::new();
+    for stone in original_stones {
+        *stones.entry(*stone).or_default() += 1;
+    }
+    debug!(i = 0, ?stones);
+    for i in 0..steps {
+        let mut new_stones = HashMap::new();
+        for (stone, count) in stones {
+            let ns = if stone == 0 {
+                vec![(1, count)]
+            } else if has_even_digits(stone) {
+                let (l, r) = split(stone);
+                vec![(l, count), (r, count)]
+            } else {
+                vec![(stone * 2024, count)]
+            };
+            for (s, c) in ns {
+                *new_stones.entry(s).or_default() += c;
+            }
+        }
+        stones = new_stones.clone();
+        debug!(i = i + 1, ?stones);
+    }
+    let r = stones.values().sum();
+    // Implement for problem
+    r
 }
 
 fn has_even_digits(v: ResultType) -> bool {
@@ -92,22 +90,4 @@ fn split(v: ResultType) -> (ResultType, ResultType) {
     let s = i.len() / 2;
     let (a, b) = i.split_at(s);
     (a.to_owned().parse().unwrap(), b.to_owned().parse().unwrap())
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use std::io::BufReader;
-
-    use tracing_test::traced_test;
-    use utils::Solution;
-
-    #[test]
-    #[traced_test]
-    fn read() {
-        let input = "replace for problem";
-        let r = BufReader::new(input.as_bytes());
-        let s = crate::Solution::try_from(r).unwrap();
-        assert_eq!(0 as ResultType, s.answer_part1(false).unwrap());
-    }
 }
