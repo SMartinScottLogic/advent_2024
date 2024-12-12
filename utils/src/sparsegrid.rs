@@ -8,7 +8,7 @@ use std::{
 
 use tracing::debug;
 
-use crate::Point;
+use crate::{region::Region, Point};
 
 #[derive(Debug, Clone)]
 pub struct Range<T> {
@@ -196,6 +196,43 @@ where
 
     pub fn iter(&self) -> impl Iterator<Item = (&Point<V>, &T)> {
         self.data.iter()
+    }
+}
+impl<T, V> SparseGrid<T, V>
+where
+    T: Default + Display + Clone + PartialEq,
+    V: Default
+        + Debug
+        + Sized
+        + Copy
+        + Sub<Output = V>
+        + Add<Output = V>
+        + AddAssign
+        + Eq
+        + PartialEq
+        + Hash
+        + Step,
+{
+    pub fn region_with_same_value(&self, probe: &Point<V>) -> Option<Region<V>> {
+        self.get(probe).map(|probe_value| {
+            let mut region = Region::new();
+            //let mut region = HashSet::new();
+            let mut remaining = Vec::new();
+            remaining.push(*probe);
+            while let Some(cur) = remaining.pop() {
+                if !region.insert(cur) {
+                    continue;
+                }
+                for neigh in cur.cardinal() {
+                    if let Some(v) = self.get(&neigh) {
+                        if v == probe_value {
+                            remaining.push(neigh);
+                        }
+                    }
+                }
+            }
+            region
+        })
     }
 }
 

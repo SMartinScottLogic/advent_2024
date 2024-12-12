@@ -4,6 +4,7 @@ pub mod graph;
 pub mod math;
 mod matrix;
 mod point;
+mod region;
 mod runner;
 mod solution;
 mod sparsegrid;
