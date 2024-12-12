@@ -1,0 +1,16 @@
+[package]
+name = "day13"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tracing = {workspace = true}
+tracing-test = {workspace = true}
+anyhow = {workspace = true}
+regex = {workspace = true}
+lazy_static = {workspace = true}
+pathfinding = {workspace = true}
+itertools = {workspace = true}
+
+[dependencies.utils]
+path = "../utils"
