@@ -44,8 +44,8 @@ impl utils::Solution for Solution {
             if have_seen.contains(cur_point) {
                 continue;
             }
-            let region = grow_region(*cur_point, *plot_type, &self.grid);
-            for n in &region {
+            let region = self.grid.region_with_same_value(cur_point).unwrap();
+            for n in region.points() {
                 have_seen.insert(*n);
             }
             info!(?region, ?plot_type);
@@ -54,9 +54,9 @@ impl utils::Solution for Solution {
         info!(?regions);
         self.answer_part1 = 0;
         for (region, plot_type) in regions {
-            let area = calculate_area(&region);
-            let perimeter = calculate_perimeter(&region);
-            let num_sides = calculate_num_sides(&region);
+            let area = region.area() as ResultType;
+            let perimeter = region.perimeter() as ResultType;
+            let num_sides = region.num_sides() as ResultType;
             info!(?plot_type, ?area, ?perimeter, ?num_sides);
             self.answer_part1 += area * perimeter;
             self.answer_part2 += area * num_sides;
@@ -71,93 +71,4 @@ impl utils::Solution for Solution {
         // Implement for problem
         Ok(self.answer_part2)
     }
-}
-
-fn grow_region(
-    cur_point: Point<isize>,
-    plot_type: char,
-    grid: &utils::SparseGrid<char, isize>,
-) -> HashSet<Point<isize>> {
-    let mut region = HashSet::new();
-    let mut remaining = Vec::new();
-    remaining.push(cur_point);
-    while let Some(cur) = remaining.pop() {
-        if !region.insert(cur) {
-            continue;
-        }
-        for neigh in cur.cardinal() {
-            if let Some(v) = grid.get(&neigh) {
-                if *v == plot_type {
-                    remaining.push(neigh);
-                }
-            }
-        }
-    }
-    region
-}
-
-fn calculate_area(region: &HashSet<Point<isize>>) -> ResultType {
-    region.len() as ResultType
-}
-
-fn calculate_perimeter(region: &HashSet<Point<isize>>) -> ResultType {
-    let mut perimeter = 0;
-    let mut shared = 0;
-    for e in region {
-        for n in e.cardinal() {
-            if region.contains(&n) {
-                shared += 1;
-                debug!(?e, ?n, "shared");
-            }
-        }
-        perimeter += 4;
-    }
-    debug!(?perimeter, ?shared, ?region);
-
-    (perimeter - shared) as ResultType
-}
-
-fn calculate_num_sides(region: &HashSet<Point<isize>>) -> ResultType {
-    let mut num_sides = 0;
-    for e in region {
-        // Outer corners
-        if !region.contains(&e.west()) && !region.contains(&e.south()) {
-            num_sides += 1;
-        }
-        if !region.contains(&e.east()) && !region.contains(&e.south()) {
-            num_sides += 1;
-        }
-        if !region.contains(&e.west()) && !region.contains(&e.north()) {
-            num_sides += 1;
-        }
-        if !region.contains(&e.east()) && !region.contains(&e.north()) {
-            num_sides += 1;
-        }
-        // Inner corners
-        if region.contains(&e.west())
-            && region.contains(&e.south())
-            && !region.contains(&e.southwest())
-        {
-            num_sides += 1;
-        }
-        if region.contains(&e.east())
-            && region.contains(&e.south())
-            && !region.contains(&e.southeast())
-        {
-            num_sides += 1;
-        }
-        if region.contains(&e.west())
-            && region.contains(&e.north())
-            && !region.contains(&e.northwest())
-        {
-            num_sides += 1;
-        }
-        if region.contains(&e.east())
-            && region.contains(&e.north())
-            && !region.contains(&e.northeast())
-        {
-            num_sides += 1;
-        }
-    }
-    num_sides as ResultType
 }
