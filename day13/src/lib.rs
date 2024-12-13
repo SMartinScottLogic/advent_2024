@@ -1,12 +1,13 @@
+use nalgebra::{matrix, vector};
 use regex::Regex;
 use std::io::{BufRead, BufReader};
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};
 use utils::Point;
-use z3::{
-    ast::{self, Ast},
-    Config, Context, SatResult, Solver,
-};
+// use z3::{
+//     ast::{self, Ast},
+//     Config, Context, SatResult, Solver,
+// };
 
 pub type ResultType = u64;
 
@@ -126,42 +127,59 @@ fn min_cost_part1(
 }
 
 fn min_cost_part2((button_a, button_b, prize): &(Button, Button, Prize)) -> Option<ResultType> {
-    let ctx = Context::new(&Config::default());
-    let solver = Solver::new(&ctx);
-
-    let a_presses = ast::Int::new_const(&ctx, "a_presses");
-    let b_presses = ast::Int::new_const(&ctx, "b_presses");
-
-    let prize_x = ast::Int::from_u64(&ctx, prize.x());
-    let prize_y = ast::Int::from_u64(&ctx, prize.y());
-    // X
-    let button_a_x = ast::Int::from_u64(&ctx, button_a.x());
-    let button_b_x = ast::Int::from_u64(&ctx, button_b.x());
-    let rx = &a_presses * &button_a_x + &b_presses * &button_b_x;
-    solver.assert(&rx._eq(&prize_x));
-
-    // Y
-    let button_a_y = ast::Int::from_u64(&ctx, button_a.y());
-    let button_b_y = ast::Int::from_u64(&ctx, button_b.y());
-    let ry = &a_presses * &button_a_y + &b_presses * &button_b_y;
-    solver.assert(&ry._eq(&prize_y));
-
-    match solver.check() {
-        SatResult::Sat => {
-            let model = solver.get_model().unwrap();
-            debug!(model = debug(&model));
-            let a = model
-                .get_const_interp(&a_presses)
-                .unwrap()
-                .as_i64()
-                .unwrap();
-            let b = model
-                .get_const_interp(&b_presses)
-                .unwrap()
-                .as_i64()
-                .unwrap();
-            Some((a * 3 + b) as ResultType)
+    // nalgebra
+    let m = matrix![button_a.x() as f64, button_b.x() as f64; button_a.y() as f64, button_b.y() as f64];
+    match m.try_inverse() {
+        Some(inv) => {
+            let r = inv * vector![prize.x() as f64, prize.y() as f64];
+            debug!(?r);
+            if r.iter().all(|f| (f - f.round()).abs() < 1e-3) {
+                let r = r.transpose() * vector![3.0, 1.0];
+                debug!(?r);
+                Some(r.magnitude().round() as u64)
+            } else {
+                None
+            }
         }
-        _ => None,
+        None => None,
     }
+    // Z3
+    // let ctx = Context::new(&Config::default());
+    // let solver = Solver::new(&ctx);
+
+    // let a_presses = ast::Int::new_const(&ctx, "a_presses");
+    // let b_presses = ast::Int::new_const(&ctx, "b_presses");
+
+    // let prize_x = ast::Int::from_u64(&ctx, prize.x());
+    // let prize_y = ast::Int::from_u64(&ctx, prize.y());
+    // // X
+    // let button_a_x = ast::Int::from_u64(&ctx, button_a.x());
+    // let button_b_x = ast::Int::from_u64(&ctx, button_b.x());
+    // let rx = &a_presses * &button_a_x + &b_presses * &button_b_x;
+    // solver.assert(&rx._eq(&prize_x));
+
+    // // Y
+    // let button_a_y = ast::Int::from_u64(&ctx, button_a.y());
+    // let button_b_y = ast::Int::from_u64(&ctx, button_b.y());
+    // let ry = &a_presses * &button_a_y + &b_presses * &button_b_y;
+    // solver.assert(&ry._eq(&prize_y));
+
+    // match solver.check() {
+    //     SatResult::Sat => {
+    //         let model = solver.get_model().unwrap();
+    //         debug!(model = debug(&model));
+    //         let a = model
+    //             .get_const_interp(&a_presses)
+    //             .unwrap()
+    //             .as_i64()
+    //             .unwrap();
+    //         let b = model
+    //             .get_const_interp(&b_presses)
+    //             .unwrap()
+    //             .as_i64()
+    //             .unwrap();
+    //         Some((a * 3 + b) as ResultType)
+    //     }
+    //     _ => None,
+    // }
 }
