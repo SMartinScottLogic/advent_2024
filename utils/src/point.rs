@@ -117,25 +117,23 @@ where
 impl<T> Mul<T> for Point<T>
 where
     T: Sized
-    + Copy
-    + Sub<Output = T>
-    + Add<Output = T>
-    + AddAssign
-    + Eq
-    + PartialEq
-    + std::hash::Hash
-    + Mul<Output = T>
-    ,
+        + Copy
+        + Sub<Output = T>
+        + Add<Output = T>
+        + AddAssign
+        + Eq
+        + PartialEq
+        + std::hash::Hash
+        + Mul<Output = T>,
 {
-type Output = Self;
+    type Output = Self;
 
-fn mul(self, rhs: T) -> Self::Output {
+    fn mul(self, rhs: T) -> Self::Output {
         Self {
             x: self.x * rhs,
             y: self.y * rhs,
         }
     }
-
 }
 
 impl<T> Add<Self> for Point<T>

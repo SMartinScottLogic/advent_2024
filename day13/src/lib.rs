@@ -1,5 +1,5 @@
-use std::{io::{BufRead, BufReader}, task::Context};
 use regex::Regex;
+use std::io::{BufRead, BufReader};
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};
 use utils::Point;
@@ -46,14 +46,12 @@ impl<T: std::io::Read> TryFrom<BufReader<T>> for Solution {
                 let x = c.name("x").unwrap().as_str().parse().unwrap();
                 let y = c.name("y").unwrap().as_str().parse().unwrap();
                 button_a = Some(Point::new(x, y));
-            }
-            else if lhs == "Button B" {
+            } else if lhs == "Button B" {
                 let c = button_regex.captures(rhs).unwrap();
                 let x = c.name("x").unwrap().as_str().parse().unwrap();
                 let y = c.name("y").unwrap().as_str().parse().unwrap();
                 button_b = Some(Point::new(x, y));
-            }
-            else if lhs == "Prize" {
+            } else if lhs == "Prize" {
                 let c = prize_regex.captures(rhs).unwrap();
                 let x = c.name("x").unwrap().as_str().parse().unwrap();
                 let y = c.name("y").unwrap().as_str().parse().unwrap();
@@ -75,7 +73,7 @@ impl utils::Solution for Solution {
         let mut total = 0;
         for machine in &self.machines {
             let mc = min_cost_part1(100, 100, machine);
-            info!(?machine, ?mc);
+            debug!(?machine, ?mc);
             if let Some(cost) = mc {
                 total += cost;
             }
@@ -88,8 +86,8 @@ impl utils::Solution for Solution {
         let mut total = 0;
         for (a, b, prize) in &self.machines {
             let prize = Point::new(10000000000000 + prize.x(), 10000000000000 + prize.y());
-            let mc = min_cost_part2(10000000000000, 10000000000000, &(*a, *b, prize));
-            info!(machine = ?(a, b, prize), ?mc);
+            let mc = min_cost_part2(&(*a, *b, prize));
+            debug!(machine = ?(a, b, prize), ?mc);
             if let Some(cost) = mc {
                 total += cost;
             }
@@ -99,9 +97,13 @@ impl utils::Solution for Solution {
     }
 }
 
-fn min_cost_part1(a_left: ResultType, b_left: ResultType, (button_a, button_b, prize): &(Button, Button, Prize)) -> Option<ResultType> {
+fn min_cost_part1(
+    a_left: ResultType,
+    b_left: ResultType,
+    (button_a, button_b, prize): &(Button, Button, Prize),
+) -> Option<ResultType> {
     let location = Point::new(0, 0);
-    info!(?a_left, ?b_left, ?location);
+    debug!(?a_left, ?b_left, ?location);
     let a_cost = 3;
     let b_cost = 1;
 
@@ -115,7 +117,7 @@ fn min_cost_part1(a_left: ResultType, b_left: ResultType, (button_a, button_b, p
             let x_presses = remaining.x() / button_b.x();
             let y_presses = remaining.y() / button_b.y();
             if x_presses == y_presses {
-                info!(?a_presses, b_presses=x_presses, "fast");
+                debug!(?a_presses, b_presses = x_presses, "fast");
                 return Some(a_presses * a_cost + x_presses * b_cost);
             }
         }
@@ -123,45 +125,43 @@ fn min_cost_part1(a_left: ResultType, b_left: ResultType, (button_a, button_b, p
     None
 }
 
-fn min_cost_part2(a_left: ResultType, b_left: ResultType, (button_a, button_b, prize): &(Button, Button, Prize)) -> Option<ResultType> {
+fn min_cost_part2((button_a, button_b, prize): &(Button, Button, Prize)) -> Option<ResultType> {
     let ctx = Context::new(&Config::default());
     let solver = Solver::new(&ctx);
 
     let a_presses = ast::Int::new_const(&ctx, "a_presses");
     let b_presses = ast::Int::new_const(&ctx, "b_presses");
 
-    let prize_x = ast::Int::from_i64(&ctx, prize.x());
-    let prize_y = ast::Int::from_i64(&ctx, prize.y());
+    let prize_x = ast::Int::from_u64(&ctx, prize.x());
+    let prize_y = ast::Int::from_u64(&ctx, prize.y());
     // X
-    let button_a_x = ast::Int::from_i64(&ctx, button_a.x());
-    let button_b_x = ast::Int::from_i64(&ctx, button_b.x());
+    let button_a_x = ast::Int::from_u64(&ctx, button_a.x());
+    let button_b_x = ast::Int::from_u64(&ctx, button_b.x());
     let rx = &a_presses * &button_a_x + &b_presses * &button_b_x;
     solver.assert(&rx._eq(&prize_x));
 
     // Y
-    let button_a_y = ast::Int::from_i64(&ctx, button_a.y());
-    let button_b_y = ast::Int::from_i64(&ctx, button_b.y());
+    let button_a_y = ast::Int::from_u64(&ctx, button_a.y());
+    let button_b_y = ast::Int::from_u64(&ctx, button_b.y());
     let ry = &a_presses * &button_a_y + &b_presses * &button_b_y;
     solver.assert(&ry._eq(&prize_y));
 
-    info!(r = ?solver.check(), "maybe");
-    None
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use std::io::BufReader;
-
-    use tracing_test::traced_test;
-    use utils::Solution;
-
-    #[test]
-    #[traced_test]
-    fn read() {
-        let input = "replace for problem";
-        let r = BufReader::new(input.as_bytes());
-        let s = crate::Solution::try_from(r).unwrap();
-        assert_eq!(0 as ResultType, s.answer_part1(false).unwrap());
+    match solver.check() {
+        SatResult::Sat => {
+            let model = solver.get_model().unwrap();
+            debug!(model = debug(&model));
+            let a = model
+                .get_const_interp(&a_presses)
+                .unwrap()
+                .as_i64()
+                .unwrap();
+            let b = model
+                .get_const_interp(&b_presses)
+                .unwrap()
+                .as_i64()
+                .unwrap();
+            Some((a * 3 + b) as ResultType)
+        }
+        _ => None,
     }
 }
