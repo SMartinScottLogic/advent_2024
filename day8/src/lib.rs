@@ -4,7 +4,7 @@ use std::{
 };
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};
-use utils::{Point, SparseGrid};
+use utils::{grid::SparseGrid, point::Point};
 
 pub type ResultType = u64;
 

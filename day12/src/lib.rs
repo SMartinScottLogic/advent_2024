@@ -4,13 +4,13 @@ use std::{
 };
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};
-use utils::Point;
+use utils::{grid::SparseGrid, point::Point};
 
 pub type ResultType = u64;
 
 #[derive(Debug, Default)]
 pub struct Solution {
-    grid: utils::SparseGrid<char, isize>,
+    grid: SparseGrid<char, isize>,
     answer_part1: ResultType,
     answer_part2: ResultType,
 }

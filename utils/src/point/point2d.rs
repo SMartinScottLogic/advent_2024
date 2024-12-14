@@ -3,7 +3,7 @@ use std::{
     ops::{Add, AddAssign, Mul, Sub},
 };
 
-use crate::Direction;
+use super::Direction;
 
 #[derive(Default, Debug, Clone, Copy, PartialOrd, Ord, Eq, Hash, PartialEq)]
 pub struct Point<T>

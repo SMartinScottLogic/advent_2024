@@ -2,7 +2,10 @@
 use std::io::{BufRead, BufReader};
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};
-use utils::{Direction, Point, SparseGrid};
+use utils::{
+    grid::SparseGrid,
+    point::{Direction, Point},
+};
 
 pub type ResultType = u64;
 

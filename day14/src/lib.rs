@@ -2,10 +2,9 @@ use std::{
     collections::HashMap,
     io::{BufRead, BufReader},
 };
-use tracing::enabled;
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};
-use utils::Picture;
+use utils::grid::Picture;
 
 pub type ResultType = u64;
 
@@ -84,14 +83,8 @@ impl utils::Solution for Solution {
                 grid.set(x, y, c + 1);
             }
             if grid.iter().all(|(_, v)| v <= 1) {
-                if enabled!(Level::INFO) {
-                    grid.display_with_mapping(|v| if v == 0 { ' ' } else { '#' }.to_string());
-                    let clumpiness = grid.clumpiness();
-                    info!(num_steps, clumpiness);
-                }
-                if num_steps > 10 {
-                    break;
-                }
+                grid.display_with_mapping(|v| if *v == 0 { " " } else { "#" });
+                break;
             }
         }
 

@@ -8,7 +8,7 @@ use std::{
 
 use tracing::debug;
 
-use crate::{region::Region, Point};
+use crate::{point::Point, region::Region};
 
 #[derive(Debug, Clone)]
 pub struct Range<T> {

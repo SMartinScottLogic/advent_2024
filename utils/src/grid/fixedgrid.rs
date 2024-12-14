@@ -6,14 +6,16 @@ pub struct FixedGrid<T> {
 }
 impl<T> FixedGrid<T>
 where
-    T: Default + Clone,
+    T: Default,
 {
     pub fn new(max_x: usize, max_y: usize) -> Self {
         let mut data = Vec::new();
         data.resize_with(max_x * max_y, T::default);
         Self { max_x, max_y, data }
     }
+}
 
+impl<T> FixedGrid<T> {
     pub fn get(&self, x: isize, y: isize) -> Option<&T> {
         if self.in_bounds(x, y) {
             let index = self.index(x, y);
@@ -36,23 +38,12 @@ where
         }
     }
 
-    pub fn display_with_mapping<F>(&self, mapping: F)
-    where
-        F: Fn(T) -> String,
-    {
-        for y in 0..self.max_y {
-            let mut line = String::new();
-            line.push_str(&format!("{:04} ", y));
-            for x in 0..self.max_x {
-                let v = match self.get(x as isize, y as isize) {
-                    Some(v) => (*v).to_owned(),
-                    None => T::default(),
-                };
-                let v = mapping(v);
-                line.push_str(&v);
-            }
-            println!("{line}");
-        }
+    pub fn max_x(&self) -> usize {
+        self.max_x
+    }
+
+    pub fn max_y(&self) -> usize {
+        self.max_y
     }
 
     fn index(&self, x: isize, y: isize) -> usize {
