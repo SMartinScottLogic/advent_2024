@@ -128,7 +128,8 @@ fn min_cost_part1(
 
 fn min_cost_part2((button_a, button_b, prize): &(Button, Button, Prize)) -> Option<ResultType> {
     // nalgebra
-    let m = matrix![button_a.x() as f64, button_b.x() as f64; button_a.y() as f64, button_b.y() as f64];
+    let m =
+        matrix![button_a.x() as f64, button_b.x() as f64; button_a.y() as f64, button_b.y() as f64];
     match m.try_inverse() {
         Some(inv) => {
             let r = inv * vector![prize.x() as f64, prize.y() as f64];
