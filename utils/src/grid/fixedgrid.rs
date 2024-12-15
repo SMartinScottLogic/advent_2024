@@ -76,6 +76,7 @@ impl<T> FixedGrid<T> {
 
 impl<T> FixedGrid<T> {
     pub fn iter(&self) -> Iter<T> {
+        panic!("Broken - do not use");
         Iter {
             grid: self,
             x: 0,
