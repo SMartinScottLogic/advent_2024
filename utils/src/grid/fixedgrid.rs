@@ -25,6 +25,23 @@ impl<T> FixedGrid<T> {
         }
     }
 
+    #[must_use]
+    pub fn set_checked(&mut self, x: isize, y: isize, value: T) -> Option<()> {
+        if !self.in_bounds(x, y) {
+            None
+        } else {
+            let index = self.index(x, y);
+            match self.data.get_mut(index) {
+                Some(v) => *v = value,
+                None => panic!(
+                    "index failure: (x: {}, y: {}, max_x: {}, max_y: {}, index: {})",
+                    x, y, self.max_x, self.max_y, index
+                ),
+            }
+            Some(())
+        }
+    }
+
     pub fn set(&mut self, x: isize, y: isize, value: T) {
         if self.in_bounds(x, y) {
             let index = self.index(x, y);
