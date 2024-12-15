@@ -96,7 +96,7 @@ where
                 point.x().try_into().unwrap(),
                 point.y().try_into().unwrap(),
                 *value,
-            );
+            ).unwrap();
         }
         Self { inner }
     }
