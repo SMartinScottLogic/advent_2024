@@ -1,4 +1,7 @@
-use std::{collections::{HashSet, VecDeque}, io::{BufRead, BufReader}};
+use std::{
+    collections::{HashSet, VecDeque},
+    io::{BufRead, BufReader},
+};
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, Level};
 use utils::{
@@ -100,7 +103,9 @@ impl utils::Solution for Solution {
         debug!(?map);
         for py in 0..map.max_y() {
             for px in 0..map.max_x() {
-                if map.get(px as isize, py as isize).unwrap() == &Box {result += 100 * py as ResultType + px as ResultType;}
+                if map.get(px as isize, py as isize).unwrap() == &Box {
+                    result += 100 * py as ResultType + px as ResultType;
+                }
             }
         }
         // for ((px, py), v) in map.iter() {
@@ -174,11 +179,13 @@ impl utils::Solution for Solution {
         for py in 0..map.max_y() {
             for px in 0..map.max_x() {
                 match map.get(px as isize, py as isize).unwrap() {
-                    Empty => {},
-                    Wall => {},
-                    Box => {},
-                    BoxL => {result += 100 * py as ResultType + px as ResultType;}
-                    BoxR => {},
+                    Empty => {}
+                    Wall => {}
+                    Box => {}
+                    BoxL => {
+                        result += 100 * py as ResultType + px as ResultType;
+                    }
+                    BoxR => {}
                 }
             }
         }
@@ -200,27 +207,23 @@ fn display_map(map: &FixedGrid<CellType>) {
         BoxR => "]",
     });
 }
-fn validate_map(map: &FixedGrid<CellType>
-) {
+fn validate_map(map: &FixedGrid<CellType>) {
     for py in 0..map.max_y() {
         for px in 0..map.max_x() {
             let c = map.get(px as isize, py as isize).unwrap();
-        match c {
-            CellType::BoxL => {
-                match map.get((px+1) as isize, py as isize).unwrap() {
+            match c {
+                CellType::BoxL => match map.get((px + 1) as isize, py as isize).unwrap() {
                     CellType::BoxR => {}
-                    c => panic!("expected ']' at {},{} saw {:?}", px+1, py, c)
-                }
-            }
-            CellType::BoxR => {
-                match map.get((px-1) as isize, py as isize).unwrap() {
+                    c => panic!("expected ']' at {},{} saw {:?}", px + 1, py, c),
+                },
+                CellType::BoxR => match map.get((px - 1) as isize, py as isize).unwrap() {
                     CellType::BoxL => {}
-                    c => panic!("expected ']' at {},{} saw {:?}", px-1, py, c)
-                }
+                    c => panic!("expected ']' at {},{} saw {:?}", px - 1, py, c),
+                },
+                _ => {}
             }
-            _ => {}
         }
-    }}
+    }
 }
 fn move_boxes_part1(
     map: &mut FixedGrid<CellType>,
@@ -291,10 +294,9 @@ fn move_boxes_part2(
         let mut probe = match map.get(desired.x() as isize, desired.y() as isize) {
             Some(BoxL) => vec![desired.to_owned(), desired.east()],
             Some(BoxR) => vec![desired.to_owned(), desired.west()],
-            c => panic!("Unexpected {:?}", c)
+            c => panic!("Unexpected {:?}", c),
         };
         let mut to_move: VecDeque<HashSet<Point<usize>>> = VecDeque::new();
-
 
         loop {
             let mut next_probe = Vec::new();
