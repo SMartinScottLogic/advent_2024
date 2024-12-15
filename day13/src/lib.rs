@@ -3,7 +3,7 @@ use regex::Regex;
 use std::io::{BufRead, BufReader};
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};
-use utils::Point;
+use utils::point::Point;
 // use z3::{
 //     ast::{self, Ast},
 //     Config, Context, SatResult, Solver,

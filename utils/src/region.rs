@@ -3,7 +3,7 @@ use std::hash::Hash;
 use std::iter::Step;
 use std::ops::{Add, AddAssign, Sub};
 
-use crate::Point;
+use crate::point::Point;
 
 #[derive(Debug, Default)]
 pub struct Region<V>

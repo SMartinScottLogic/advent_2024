@@ -2,7 +2,7 @@ use array2d::Array2D;
 use std::io::{BufRead, BufReader};
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};
-use utils::{Direction, Point};
+use utils::point::{Direction, Point};
 
 pub type ResultType = u64;
 

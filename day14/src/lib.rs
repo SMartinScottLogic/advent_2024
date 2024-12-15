@@ -4,7 +4,7 @@ use std::{
 };
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};
-use utils::Point;
+use utils::grid::Picture;
 
 pub type ResultType = u64;
 
@@ -37,27 +37,13 @@ impl utils::Solution for Solution {
     fn analyse(&mut self, _is_full: bool) {}
 
     fn answer_part1(&self, _is_full: bool) -> Self::Result {
-        let mut robots = self.robots.clone();
-
         let num_steps = 100;
         let max_x = 101;
         let max_y = 103;
         let mut grid: HashMap<(isize, isize), usize> = HashMap::new();
-        for robot in robots.iter_mut() {
-            let mut x = robot.position.x() + robot.velocity.x() * num_steps;
-            let mut y = robot.position.y() + robot.velocity.y() * num_steps;
-            while x >= max_x {
-                x -= max_x;
-            }
-            while x < 0 {
-                x += max_x;
-            }
-            while y >= max_y {
-                y -= max_y;
-            }
-            while y < 0 {
-                y += max_y;
-            }
+        for robot in &self.robots {
+            let x = (robot.px + robot.vx * num_steps).rem_euclid(max_x);
+            let y = (robot.py + robot.vy * num_steps).rem_euclid(max_y);
             *grid.entry((x, y)).or_default() += 1;
         }
         debug!(?grid);
@@ -83,21 +69,21 @@ impl utils::Solution for Solution {
     }
 
     fn answer_part2(&self, _is_full: bool) -> Self::Result {
-        let mut robots = self.robots.clone();
-
         let mut num_steps = 0;
         let max_x = 101;
         let max_y = 103;
         loop {
-            let mut grid = utils::Matrix::new();
+            let mut grid = Picture::new(max_x, max_y);
+            //let mut grid = utils::Matrix::new();
             num_steps += 1;
-            for robot in robots.iter_mut() {
-                let x = (robot.position.x() + robot.velocity.x() * num_steps).rem_euclid(max_x);
-                let y = (robot.position.y() + robot.velocity.y() * num_steps).rem_euclid(max_y);
-                grid.set(x, y, grid.get(x, y).unwrap_or(&0) + 1);
+            for robot in &self.robots {
+                let x = (robot.px + robot.vx * num_steps).rem_euclid(max_x as isize);
+                let y = (robot.py + robot.vy * num_steps).rem_euclid(max_y as isize);
+                let c = grid.get(x, y).unwrap_or(&0).to_owned();
+                grid.set(x, y, c + 1);
             }
-            if grid.len() == robots.len() {
-                grid.display_with_mapping(|v| format!("{}", v));
+            if grid.iter().all(|(_, v)| v <= 1) {
+                grid.display_with_mapping(|v| if *v == 0 { " " } else { "#" });
                 break;
             }
         }
@@ -109,8 +95,10 @@ impl utils::Solution for Solution {
 
 #[derive(Debug, Clone)]
 struct Robot {
-    position: Point<isize>,
-    velocity: Point<isize>,
+    px: isize,
+    py: isize,
+    vx: isize,
+    vy: isize,
 }
 impl From<String> for Robot {
     fn from(value: String) -> Self {
@@ -119,13 +107,10 @@ impl From<String> for Robot {
         )
         .unwrap();
         let c = r.captures(&value).unwrap();
-        let x = c.name("x").unwrap().as_str().parse().unwrap();
-        let y = c.name("y").unwrap().as_str().parse().unwrap();
+        let px = c.name("x").unwrap().as_str().parse().unwrap();
+        let py = c.name("y").unwrap().as_str().parse().unwrap();
         let vx = c.name("vx").unwrap().as_str().parse().unwrap();
         let vy = c.name("vy").unwrap().as_str().parse().unwrap();
-        Self {
-            position: Point::new(x, y),
-            velocity: Point::new(vx, vy),
-        }
+        Self { px, py, vx, vy }
     }
 }
