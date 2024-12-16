@@ -105,9 +105,7 @@ where
                 self.x = 0;
                 self.y += 1;
             }
-            self.grid
-                .get(cx, cy)
-                .map(|v| ((cx, cy), v.to_owned()))
+            self.grid.get(cx, cy).map(|v| ((cx, cy), v.to_owned()))
         } else {
             None
         }
@@ -156,5 +154,4 @@ mod tests {
             assert_eq!(expected as usize, *grid.get(px, py).unwrap());
         }
     }
-
 }
