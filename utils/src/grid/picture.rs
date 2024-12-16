@@ -92,11 +92,13 @@ where
         let max_y = value.max_y();
         let mut inner: FixedGrid<T> = FixedGrid::new(*max_x, *max_y);
         for (point, value) in value.iter() {
-            inner.set_checked(
-                point.x().try_into().unwrap(),
-                point.y().try_into().unwrap(),
-                *value,
-            );
+            inner
+                .set_checked(
+                    point.x().try_into().unwrap(),
+                    point.y().try_into().unwrap(),
+                    *value,
+                )
+                .unwrap();
         }
         Self { inner }
     }

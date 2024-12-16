@@ -76,7 +76,7 @@ impl<T> FixedGrid<T> {
 
 impl<T> FixedGrid<T> {
     pub fn iter(&self) -> Iter<T> {
-        panic!("Broken - do not use");
+        //panic!("Broken - do not use");
         Iter {
             grid: self,
             x: 0,
@@ -105,11 +105,53 @@ where
                 self.x = 0;
                 self.y += 1;
             }
-            self.grid
-                .get(self.x, self.y)
-                .map(|v| ((cx, cy), v.to_owned()))
+            self.grid.get(cx, cy).map(|v| ((cx, cy), v.to_owned()))
         } else {
             None
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        let result = 2 + 2;
+        assert_eq!(result, 4);
+    }
+
+    #[test]
+    fn manual_iteration() {
+        let mut grid = FixedGrid::new(20, 20);
+        for y in 0..grid.max_y() {
+            for x in 0..grid.max_x() {
+                grid.set(x as isize, y as isize, x + y * 100);
+            }
+        }
+        for y in 0..grid.max_y() {
+            for x in 0..grid.max_x() {
+                let expected = x + y * 100;
+                let actual = grid.get(x as isize, y as isize);
+                assert!(actual.is_some());
+                assert_eq!(&expected, actual.unwrap());
+            }
+        }
+    }
+
+    #[test]
+    fn iterator() {
+        let mut grid = FixedGrid::new(20, 20);
+        for y in 0..grid.max_y() {
+            for x in 0..grid.max_x() {
+                grid.set(x as isize, y as isize, x + y * 100);
+            }
+        }
+        for ((px, py), value) in grid.iter() {
+            let expected = px + py * 100;
+            assert_eq!(value, expected as usize);
+            assert_eq!(expected as usize, *grid.get(px, py).unwrap());
         }
     }
 }
