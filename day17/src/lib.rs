@@ -73,6 +73,7 @@ impl utils::Solution for Solution {
                 break v;
             }
         };
+        solve(&self.program, &self.registers);
         // Implement for problem
         Ok(format!("{}", r))
     }
@@ -145,6 +146,31 @@ print(opt.model().eval(s))
 
     print(min(valid))
 */
+
+fn solve(program: &[u64], registers: &HashMap<String, u64>) {
+    let mut queue = (0..8).collect::<Vec<_>>();
+    let mut valid = Vec::new();
+    for index in 0..program.len() {
+        info!(index, total=program.len(), queue=queue.len());
+
+        for value in queue {
+            let mut local_registers = registers.clone();
+            local_registers.insert("A".to_string(), value);
+            let out = run_program(program, &local_registers);
+            if !out.is_empty() && out[0]==program[index] {
+                valid.push(value);
+            }
+        }
+        let mut next = Vec::new();
+        while let Some(v) = valid.pop() {
+            for i in 0..8 {
+                next.push(v * 8 + i);
+            }
+        }
+        queue = next;
+    }
+    info!(?valid);
+}
     fn run_program(program: &[u64], registers: &HashMap<String, u64>) -> Vec<u64> {
         // Implement for problem
         let mut registers = registers.clone();
