@@ -58,7 +58,12 @@ impl utils::Solution for Solution {
     fn analyse(&mut self, _is_full: bool) {}
 
     fn answer_part1(&self, _is_full: bool) -> Self::Result {
-        let outputs = run_program(&self.program, &self.registers);
+        let registers = Registers {
+            a: *self.registers.get("A").unwrap(),
+            b: *self.registers.get("B").unwrap(),
+            c: *self.registers.get("C").unwrap(),
+        };
+        let outputs = run_program(&self.program, registers);
         let r = outputs
             .iter()
             .map(|v| format!("{}", *v))
@@ -68,14 +73,27 @@ impl utils::Solution for Solution {
     }
 
     fn answer_part2(&self, _is_full: bool) -> Self::Result {
-        dump_program(&self.program);
+        if event_enabled!(Level::DEBUG) {
+            dump_program(&self.program);
+        }
 
         let mut r = 0;
-        if let Some(c) = solve(&self.program, &self.registers) {
-            let mut registers = self.registers.clone();
-            registers.insert("A".to_string(), c);
-            let output = run_program(&self.program, &registers);
-            assert_eq!(output, self.program);
+        let registers = Registers {
+            a: *self.registers.get("A").unwrap(),
+            b: *self.registers.get("B").unwrap(),
+            c: *self.registers.get("C").unwrap(),
+        };
+
+        if let Some(c) = solve(&self.program, registers) {
+            if event_enabled!(Level::DEBUG) {
+                let registers = Registers {
+                    a: c,
+                    b: *self.registers.get("B").unwrap(),
+                    c: *self.registers.get("C").unwrap(),
+                };
+                    let output = run_program(&self.program, registers);
+                assert_eq!(output, self.program);
+            }
             r = c;
         }
         // Implement for problem
@@ -100,7 +118,7 @@ fn dump_program(program: &[u64]) {
     }
 }
 
-fn solve(program: &[u64], registers: &HashMap<String, u64>) -> Option<u64> {
+fn solve(program: &[u64], registers: Registers) -> Option<u64> {
     let mut aim = program.to_vec();
     aim.reverse();
     let mut queue = (0..8).collect::<HashSet<_>>();
@@ -110,9 +128,12 @@ fn solve(program: &[u64], registers: &HashMap<String, u64>) -> Option<u64> {
         debug!(index, total = program.len(), queue = queue.len());
 
         for value in queue {
-            let mut local_registers = registers.clone();
-            local_registers.insert("A".to_string(), value);
-            let out = run_program(program, &local_registers);
+            let local_registers = Registers {
+                a: value,
+                b: registers.b,
+                c: registers.c,
+            };
+            let out = run_program(program, local_registers);
             if !out.is_empty() && out.len() == index + 1 && out[0] == *target {
                 valid.push(value);
                 debug!(?out, ?program);
@@ -127,12 +148,10 @@ fn solve(program: &[u64], registers: &HashMap<String, u64>) -> Option<u64> {
         queue = next;
     }
     debug!(?valid);
-    valid.iter().cloned().min()
+    valid.into_iter().min()
 }
 
-fn run_program(program: &[u64], registers: &HashMap<String, u64>) -> Vec<u64> {
-    // Implement for problem
-    let mut registers = registers.clone();
+fn run_program(program: &[u64], mut registers: Registers) -> Vec<u64> {
     let mut ip = 0_usize;
 
     let mut outputs = Vec::new();
@@ -149,35 +168,36 @@ fn run_program(program: &[u64], registers: &HashMap<String, u64>) -> Vec<u64> {
             1 => 1,
             2 => 2,
             3 => 3,
-            4 => *registers.get("A").unwrap(),
-            5 => *registers.get("B").unwrap(),
-            6 => *registers.get("C").unwrap(),
+            4 => registers.a,
+            5 => registers.b,
+            6 => registers.c,
             _ => todo!(),
         };
         match opcode {
             // adv
             0 => {
-                let numerator = *registers.get("A").unwrap() as f64;
-                let denominator = 2_f64.powf(combo_operand as f64);
+                let numerator = registers.a as f64;
+                let denominator = (1 << combo_operand) as f64;
+                //let denominator = 2_f64.powf(combo_operand as f64);
 
                 let r = (numerator / denominator).floor() as u64;
-                registers.insert("A".to_string(), r);
+                registers.a = r;
             }
             //bxl
             1 => {
-                let lhs = *registers.get("B").unwrap();
+                let lhs = registers.b;
                 let rhs = operand;
                 let r = lhs ^ rhs;
-                registers.insert("B".to_string(), r);
+                registers.b = r;
             }
             //bst
             2 => {
                 let r = combo_operand % 8;
-                registers.insert("B".to_string(), r);
+                registers.b = r;
             }
             //jnz
             3 => {
-                let a = *registers.get("A").unwrap();
+                let a = registers.a;
                 if a == 0 {
                 } else {
                     ip = operand as usize;
@@ -186,10 +206,10 @@ fn run_program(program: &[u64], registers: &HashMap<String, u64>) -> Vec<u64> {
             }
             //bxc
             4 => {
-                let lhs = *registers.get("B").unwrap();
-                let rhs = *registers.get("C").unwrap();
+                let lhs = registers.b;
+                let rhs = registers.c;
                 let r = lhs ^ rhs;
-                registers.insert("B".to_string(), r);
+                registers.b = r;
             }
             //out
             5 => {
@@ -198,19 +218,21 @@ fn run_program(program: &[u64], registers: &HashMap<String, u64>) -> Vec<u64> {
             }
             //bdv
             6 => {
-                let numerator = *registers.get("A").unwrap() as f64;
-                let denominator = 2_f64.powf(combo_operand as f64);
+                let numerator = registers.a as f64;
+                let denominator = (1 << combo_operand) as f64;
+                //let denominator = 2_f64.powf(combo_operand as f64);
 
                 let r = (numerator / denominator).floor() as u64;
-                registers.insert("B".to_string(), r);
+                registers.b = r;
             }
             //cdv
             7 => {
-                let numerator = *registers.get("A").unwrap() as f64;
-                let denominator = 2_f64.powf(combo_operand as f64);
+                let numerator = registers.a as f64;
+                let denominator = (1 << combo_operand) as f64;
+                //let denominator = 2_f64.powf(combo_operand as f64);
 
                 let r = (numerator / denominator).floor() as u64;
-                registers.insert("C".to_string(), r);
+                registers.c = r;
             }
             _ => todo!(),
         }
@@ -220,4 +242,11 @@ fn run_program(program: &[u64], registers: &HashMap<String, u64>) -> Vec<u64> {
     }
     debug!(output=?outputs);
     outputs
+}
+
+#[derive(Debug)]
+struct Registers {
+    a: u64,
+    b: u64,
+    c: u64,
 }
