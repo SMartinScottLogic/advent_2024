@@ -1,4 +1,5 @@
 use std::{collections::HashMap, io::{BufRead, BufReader}};
+use itertools::Itertools;
 use regex::Regex;
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};
@@ -56,6 +57,8 @@ impl utils::Solution for Solution {
     }
 
     fn answer_part2(&self, _is_full: bool) -> Self::Result {
+        dump_program(&self.program);
+        
         let mut v = 0;
         let r = loop {
             let mut registers = self.registers.clone();
@@ -66,12 +69,82 @@ impl utils::Solution for Solution {
                 break v;
             }
             v += 1;
+            if v > 10 {
+                break v;
+            }
         };
         // Implement for problem
         Ok(format!("{}", r))
     }
 }
 
+fn dump_program(program: &[u64]) {
+    for ((ip1, opcode), (ip2, operand)) in program.iter().enumerate().tuples() {
+        let op = match opcode {
+            0 => "div",
+            1 => "bxl",
+            2 => "bst",
+            3 => "jnz",
+            4 => "bxc",
+            5 => "out",
+            6 => "bdv",
+            7 => "cdv",
+            _ => panic!()
+        };
+        info!(p = format!("{}: {} {} | {} {}", ip1, op, operand, opcode, operand));
+    }
+}
+
+/*
+opt = Optimize()
+s = BitVec('s', 64)
+a, b, c = s, 0, 0
+for x in [2,4,1,5,7,5,4,3,1,6,0,3,5,5,3,0]:
+    b = a % 8
+    b = b ^ 5
+    c = a / (1 << b)
+    b = b ^ c
+    b = b ^ 6
+    a = a / (1 << 3)
+    opt.add((b % 8) == x)
+opt.add(a == 0)
+opt.minimize(s)
+assert str(opt.check()) == 'sat'
+print(opt.model().eval(s))
+
+    values = [2, 4, 1, 1, 7, 5, 1, 5, 0, 3, 4, 3, 5, 5, 3, 0][::-1]
+    queue = list(range(8))
+
+    for index in range(len(values)):
+        print(f"index: {index+1} of {len(values)}; queue: {len(queue)}")
+        valid = []
+
+        for value in queue:
+            a = value
+            # 2,4
+            b = a % 8
+            # 1,1
+            b = b ^ 1
+            # 7,5
+            c = a // (1 << b)
+            # 1,5
+            b = b ^ 5
+            # 0,3 a = a // 8
+            # 4,3
+            b = b ^ c
+            # 5,5 print b % 8
+            if b % 8 == values[index]:
+                valid.append(value)
+            # 3,0 jnz ignored
+        next_level = []
+        for v in valid:
+            for i in range(8):
+                next_level.append(v * 8 + i)
+
+        queue = next_level
+
+    print(min(valid))
+*/
     fn run_program(program: &[u64], registers: &HashMap<String, u64>) -> Vec<u64> {
         // Implement for problem
         let mut registers = registers.clone();
