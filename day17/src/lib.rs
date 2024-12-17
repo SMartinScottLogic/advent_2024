@@ -56,8 +56,19 @@ impl utils::Solution for Solution {
     }
 
     fn answer_part2(&self, _is_full: bool) -> Self::Result {
+        let mut v = 0;
+        let r = loop {
+            let mut registers = self.registers.clone();
+            registers.insert("A".to_string(), v);
+            let output = run_program(&self.program, &registers);
+            info!(v, ?output);
+            if output == self.program {
+                break v;
+            }
+            v += 1;
+        };
         // Implement for problem
-        Ok("".to_string())
+        Ok(format!("{}", r))
     }
 }
 
@@ -140,6 +151,6 @@ impl utils::Solution for Solution {
                 ip += 2;
             }
         }
-        info!(output=?outputs);
+        debug!(output=?outputs);
         outputs
     }
