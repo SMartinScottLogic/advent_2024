@@ -91,7 +91,7 @@ impl utils::Solution for Solution {
                     b: *self.registers.get("B").unwrap(),
                     c: *self.registers.get("C").unwrap(),
                 };
-                    let output = run_program(&self.program, registers);
+                let output = run_program(&self.program, registers);
                 assert_eq!(output, self.program);
             }
             r = c;
