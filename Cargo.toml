@@ -3,7 +3,7 @@ resolver = "2"
 members = [
     "utils",
     "template",
-    "xtask", "day1", "day2", "day3", "day4", "day5", "day6", "day7", "day8", "day9", "day10", "day11", "day12", "day13", "day14", "day15", "day16", "day17", "day18", "day19"]
+    "xtask", "day1", "day2", "day3", "day4", "day5", "day6", "day7", "day8", "day9", "day10", "day11", "day12", "day13", "day14", "day15", "day16", "day17", "day18", "day19", "day20"]
 
 [workspace.dependencies]
 # Flexible concrete Error type built on std::error::Error
@@ -14,7 +14,7 @@ itertools = "0.13"
 # An implementation of regular expressions for Rust. This implementation uses finite automata …
 regex = "1.10"
 # Pathfinding, flow, and graph algorithms
-pathfinding = "4.4"
+pathfinding = "4.12"
 
 tracing = "0.1"
 tracing-subscriber = "0.3"
