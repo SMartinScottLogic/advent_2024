@@ -1,3 +1,4 @@
+use michie::memoized;
 use std::{
     collections::HashMap,
     io::{BufRead, BufReader},
@@ -62,7 +63,7 @@ impl utils::Solution for Solution {
         let r = self
             .designs
             .iter()
-            .map(|d| num_ways(d, &self.patterns, &mut HashMap::new()))
+            .map(|d| num_ways(d, &self.patterns))
             .sum();
         Ok(r)
     }
@@ -81,23 +82,16 @@ fn can_make(design: &str, patterns: &Vec<String>) -> bool {
     false
 }
 
-fn num_ways(
-    design: &str,
-    patterns: &Vec<String>,
-    memo: &mut HashMap<String, ResultType>,
-) -> ResultType {
-    if let Some(value) = memo.get(design) {
-        return *value;
-    }
+#[memoized(key_expr = design.to_string(), store_type = HashMap<String, ResultType>)]
+fn num_ways(design: &str, patterns: &Vec<String>) -> ResultType {
     let mut total = 0;
     for p in patterns {
         if design == p {
             total += 1;
         }
         if design.starts_with(p) {
-            total += num_ways(&design[p.len()..], patterns, memo);
+            total += num_ways(&design[p.len()..], patterns);
         }
     }
-    memo.insert(design.to_string(), total);
     total
 }
