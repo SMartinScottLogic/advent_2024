@@ -1,5 +1,9 @@
-use std::{cmp::min, collections::VecDeque, io::{BufRead, BufReader}};
 use memoize::memoize;
+use std::{
+    cmp::min,
+    collections::VecDeque,
+    io::{BufRead, BufReader},
+};
 #[allow(unused_imports)]
 use tracing::{debug, event_enabled, info, Level};
 
@@ -41,7 +45,7 @@ impl utils::Solution for Solution {
                 let numeric_part: usize = code.strip_suffix("A").unwrap().parse().unwrap();
                 debug!(?code, ?len, ?numeric_part);
                 len * numeric_part
-            })            
+            })
             .fold(0 as ResultType, |acc, v| acc + v as ResultType);
 
         // Implement for problem
@@ -57,7 +61,7 @@ impl utils::Solution for Solution {
                 let numeric_part: usize = code.strip_suffix("A").unwrap().parse().unwrap();
                 debug!(?code, ?len, ?numeric_part);
                 len * numeric_part
-            })            
+            })
             .fold(0 as ResultType, |acc, v| acc + v as ResultType);
 
         // Implement for problem
@@ -74,7 +78,7 @@ fn cheapest_sequence_len(code: &str, num_keypads: usize) -> usize {
     for c in code.bytes() {
         for ty in 0..4 {
             for tx in 0..3 {
-                if number_pad[ty*3 + tx] == c {
+                if number_pad[ty * 3 + tx] == c {
                     total += cheapest_pad_len(px, py, tx, ty, num_keypads);
                     px = tx;
                     py = ty;
@@ -102,15 +106,15 @@ fn cheapest_pad_len(px: usize, py: usize, tx: usize, ty: usize, num_keypads: usi
         }
         match v.1.cmp(&ty) {
             std::cmp::Ordering::Less => queue.push_back((v.0, v.1 + 1, v.2.clone() + "v")),
-            std::cmp::Ordering::Equal => {},
+            std::cmp::Ordering::Equal => {}
             std::cmp::Ordering::Greater => queue.push_back((v.0, v.1 - 1, v.2.clone() + "^")),
         }
         match v.0.cmp(&tx) {
             std::cmp::Ordering::Less => queue.push_back((v.0 + 1, v.1, v.2.clone() + ">")),
-            std::cmp::Ordering::Equal => {},
+            std::cmp::Ordering::Equal => {}
             std::cmp::Ordering::Greater => queue.push_back((v.0 - 1, v.1, v.2.clone() + "<")),
         }
-}
+    }
     cheapest
 }
 
@@ -147,7 +151,7 @@ fn cheapest_dir_pad(px: usize, py: usize, tx: usize, ty: usize, num_robots: usiz
 
     while let Some(v) = queue.pop_front() {
         if v.0 == tx && v.1 == ty {
-            let cost = cheapest_robot(&(v.2.clone() + "A"), num_robots-1);
+            let cost = cheapest_robot(&(v.2.clone() + "A"), num_robots - 1);
             if cost < cheapest {
                 cheapest = cost;
             }
@@ -158,14 +162,14 @@ fn cheapest_dir_pad(px: usize, py: usize, tx: usize, ty: usize, num_robots: usiz
             continue;
         }
         match v.1.cmp(&ty) {
-            std::cmp::Ordering::Less => queue.push_back((v.0, v.1 + 1, v.2.clone() + "v" )),
-            std::cmp::Ordering::Equal => {},
+            std::cmp::Ordering::Less => queue.push_back((v.0, v.1 + 1, v.2.clone() + "v")),
+            std::cmp::Ordering::Equal => {}
             std::cmp::Ordering::Greater => queue.push_back((v.0, v.1 - 1, v.2.clone() + "^")),
         }
         match v.0.cmp(&tx) {
-            std::cmp::Ordering::Less => queue.push_back(( v.0 + 1, v.1, v.2.clone() + ">" )),
-            std::cmp::Ordering::Equal => {},
-            std::cmp::Ordering::Greater => queue.push_back(( v.0 - 1, v.1, v.2.clone() + "<" )),
+            std::cmp::Ordering::Less => queue.push_back((v.0 + 1, v.1, v.2.clone() + ">")),
+            std::cmp::Ordering::Equal => {}
+            std::cmp::Ordering::Greater => queue.push_back((v.0 - 1, v.1, v.2.clone() + "<")),
         }
     }
     cheapest
