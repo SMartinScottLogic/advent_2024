@@ -144,3 +144,72 @@ impl HasOne for i64 {
         1
     }
 }
+
+type Graph<'a, N> = HashMap<N, HashSet<N>>;
+type NodeSet<N> = HashSet<N>;
+
+/**
+https://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm
+
+In computer science, the Bron–Kerbosch algorithm is an enumeration algorithm for finding all
+maximal cliques in an undirected graph. That is, it lists all subsets of vertices with the
+two properties that each pair of vertices in one of the listed subsets is connected by an edge,
+and no listed subset can have any additional vertices added to it while preserving its complete
+connectivity. The Bron–Kerbosch algorithm was designed by Dutch scientists Coenraad Bron and
+Joep Kerbosch, who published its description in 1973.
+*/
+pub fn bron_kerbosch<N>(graph: &Graph<N>) -> Vec<NodeSet<N>>
+where
+    N: Clone + Eq + Hash,
+{
+    let mut cliques = Vec::new();
+
+    let mut r = HashSet::new();
+    let x = HashSet::new();
+    //let p: NodeSet<usize> = (0..graph.len()).collect();
+    let p = graph.keys().cloned().collect();
+
+    bron_kerbosch1(graph, &mut cliques, &mut r, p, x);
+
+    cliques
+}
+
+fn bron_kerbosch1<N>(
+    graph: &Graph<N>,
+    cliques: &mut Vec<NodeSet<N>>,
+    r: &mut NodeSet<N>,
+    p: NodeSet<N>,
+    mut x: NodeSet<N>,
+) where
+    N: Clone + Eq + Hash,
+{
+    if p.is_empty() && x.is_empty() {
+        if cliques.is_empty() {
+            cliques.push(r.clone());
+            return;
+        }
+
+        let cur = cliques.first().unwrap().len();
+        if cur < r.len() {
+            cliques.clear();
+        }
+        if cur <= r.len() {
+            cliques.push(r.clone())
+        }
+        return;
+    }
+
+    let mut p_clone = p.clone();
+    let pivot = p.union(&x).max_by_key(|v| graph[*v].len()).unwrap().clone();
+
+    for v in p.difference(&graph[&pivot]) {
+        r.insert(v.to_owned());
+        let p1: NodeSet<N> = p_clone.intersection(&graph[v]).cloned().collect();
+        let x1: NodeSet<N> = x.intersection(&graph[v]).cloned().collect();
+        bron_kerbosch1(graph, cliques, r, p1, x1);
+        r.remove(v);
+
+        p_clone.remove(v);
+        x.insert(v.to_owned());
+    }
+}
