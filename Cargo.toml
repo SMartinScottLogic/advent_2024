@@ -26,7 +26,7 @@ strum_macros = "0.26.4"             # Helpful macros for working with enums and 
 array2d = "0.3"
 nom = "7.1.3"                       # A byte-oriented, zero-copy, parser combinators library
 z3 = "0.12.1"
-memoize = "0.4.2"          # Attribute macro for auto-memoizing functions with somewhat-simple signatures
+memoize = "0.5.1"          # Attribute macro for auto-memoizing functions with somewhat-simple signatures
 
 [profile.release]
 debug = true
