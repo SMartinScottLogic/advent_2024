@@ -12,7 +12,7 @@ lazy_static = {workspace = true}
 pathfinding = {workspace = true}
 itertools = {workspace = true}
 #z3 = {workspace = true}
-nalgebra = "0.33.2"
+nalgebra = "0.34.0"
 
 [dependencies.utils]
 path = "../utils"
